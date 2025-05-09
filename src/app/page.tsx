@@ -1,10 +1,12 @@
+
 "use client";
 
 import * as React from "react";
 import { AppLayout } from "@/components/app-layout";
 import { EnergyPredictor } from "@/components/energy-predictor";
 import { ModelOptimizer } from "@/components/model-optimizer";
-import { BarChartBig, Settings2, Zap } from "lucide-react"; // Zap for a general energy icon
+import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-card";
+import { BarChartBig, Settings2, Zap } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
@@ -82,6 +84,7 @@ function DashboardView() {
           </div>
         </CardContent>
       </Card>
+      <AppEnergyConsumptionCard />
     </div>
   );
 }
