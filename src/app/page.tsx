@@ -9,7 +9,7 @@ import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-ca
 import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
-import { BarChartBig, Settings2, Zap, Lightbulb, GitCompareArrows, MessageCircle } from "lucide-react"; 
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
@@ -28,7 +28,7 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
-          <CardTitle className="text-xl text-primary">Welcome to Aura</CardTitle>
+          <CardTitle className="text-xl text-primary">Dashboard Overview</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
         </CardHeader>
         <CardContent>
@@ -121,7 +121,7 @@ export default function HomePage() {
   const [activeView, setActiveView] = React.useState<View>("dashboard");
 
   const navItems: NavItem[] = [
-    { id: "dashboard", label: "Aura Home", icon: Zap, action: () => setActiveView("dashboard") },
+    { id: "dashboard", label: "Home", icon: Home, action: () => setActiveView("dashboard") },
     { id: "predictor", label: "Energy Predictor", icon: BarChartBig, action: () => setActiveView("predictor") },
     { id: "optimizer", label: "Model Optimizer", icon: Settings2, action: () => setActiveView("optimizer") },
     { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") },

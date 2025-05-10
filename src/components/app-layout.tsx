@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -18,7 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger, 
 } from "@/components/ui/sidebar";
-// import { SheetTitle } from "@/components/ui/sheet"; // Removed unused import
+import { SheetTitle } from "@/components/ui/sheet";
 
 interface NavItem {
   id: string;
@@ -39,7 +40,7 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkTheme(prefersDark); // Set initial theme based on system preference
+      setIsDarkTheme(prefersDark); 
       document.documentElement.classList.toggle('dark', prefersDark);
     }
   }, []);
@@ -92,11 +93,15 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
       </Sidebar>
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          <AuraLogo 
-            iconClassName="h-5 w-5" 
-            className="!text-foreground p-0 hover:bg-transparent focus-visible:ring-offset-0 focus-visible:ring-transparent"
-            textAlwaysVisible={true} 
-          />
+          {activeView === 'dashboard' ? (
+            <h1 className="text-xl font-semibold text-foreground">Home</h1>
+          ) : (
+            <AuraLogo 
+              iconClassName="h-5 w-5" 
+              className="!text-foreground p-0 hover:bg-transparent focus-visible:ring-offset-0 focus-visible:ring-transparent"
+              textAlwaysVisible={true} 
+            />
+          )}
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
           {children}
@@ -105,3 +110,4 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
+
