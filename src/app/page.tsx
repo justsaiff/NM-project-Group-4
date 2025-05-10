@@ -9,12 +9,15 @@ import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-ca
 import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home } from "lucide-react"; 
+import { ReportsView } from "@/components/reports-view"; // Import new ReportsView
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import type { SavedReport } from "@/types/reports"; // Import SavedReport type
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot";
+// Add "reports" to the View type
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports";
 
 interface NavItem {
   id: View;
@@ -112,6 +115,27 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
         </CardContent>
       </Card>
       <AppEnergyConsumptionCard />
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reports")}>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>View Reports</CardTitle>
+          <CardDescription>Access saved model comparison reports</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Review all your previously saved model comparison reports in one place.
+          </p>
+           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
+            <Image 
+              src="https://picsum.photos/seed/aura-reports/600/400" 
+              alt="Reports and documents concept" 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              data-ai-hint="documents files"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -119,6 +143,16 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
 
 export default function HomePage() {
   const [activeView, setActiveView] = React.useState<View>("dashboard");
+  const [savedReports, setSavedReports] = React.useState<SavedReport[]>([]);
+
+  const handleSaveReport = (reportData: Omit<SavedReport, 'id'>) => {
+    const newReport: SavedReport = {
+      ...reportData,
+      id: crypto.randomUUID(), // Generate unique ID
+    };
+    setSavedReports(prevReports => [...prevReports, newReport]);
+  };
+
 
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Home", icon: Home, action: () => setActiveView("dashboard") },
@@ -127,6 +161,7 @@ export default function HomePage() {
     { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") },
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
+    { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, // New "Reports" nav item
   ];
 
   const renderView = () => {
@@ -142,7 +177,9 @@ export default function HomePage() {
       case "savingTips":
         return <SavingTipsView />;
       case "modelComparison":
-        return <ModelComparisonView />;
+        return <ModelComparisonView onSaveReport={handleSaveReport} />; // Pass onSaveReport prop
+      case "reports":
+        return <ReportsView reports={savedReports} />; // New "Reports" view
       default:
         return <DashboardView setActiveView={setActiveView} />;
     }

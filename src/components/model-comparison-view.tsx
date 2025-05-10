@@ -23,6 +23,7 @@ import { GitCompareArrows, Loader2, FileDown, Save } from "lucide-react";
 import { ModelSelector } from "./model-selector";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 
 
 const comparisonFormSchema = z.object({
@@ -36,7 +37,7 @@ const comparisonFormSchema = z.object({
 
 type ComparisonFormValues = z.infer<typeof comparisonFormSchema>;
 
-interface ModelPredictionResult extends EnergyPredictionOutput {
+interface ExtendedPredictionResult extends EnergyPredictionOutput {
   parsedEnergyValue: number;
   energyUnit: string;
 }
@@ -48,11 +49,14 @@ const parseEnergyValueAndUnit = (energyString: string): { value: number; unit: s
   return { value, unit };
 };
 
+interface ModelComparisonViewProps {
+  onSaveReport?: (report: Omit<SavedReport, 'id'>) => void; // Callback to save report to app state
+}
 
-export function ModelComparisonView() {
+export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) {
   const [isLoading, setIsLoading] = React.useState(false);
-  const [modelAResult, setModelAResult] = React.useState<ModelPredictionResult | null>(null);
-  const [modelBResult, setModelBResult] = React.useState<ModelPredictionResult | null>(null);
+  const [modelAResult, setModelAResult] = React.useState<ExtendedPredictionResult | null>(null);
+  const [modelBResult, setModelBResult] = React.useState<ExtendedPredictionResult | null>(null);
   const { toast } = useToast();
 
   const form = useForm<ComparisonFormValues>({
@@ -119,7 +123,7 @@ export function ModelComparisonView() {
     }
   }
 
-  const chartData = React.useMemo(() => {
+  const chartData = React.useMemo((): ReportChartData[] => {
     if (!modelAResult || !modelBResult) return [];
     return [
       { name: "Model A", energy: modelAResult.parsedEnergyValue, unit: modelAResult.energyUnit },
@@ -129,32 +133,36 @@ export function ModelComparisonView() {
   
   const primaryUnit = modelAResult?.energyUnit || modelBResult?.energyUnit || "units";
 
-  const generateReportData = () => {
+  const generateReportObject = (): Omit<SavedReport, 'id'> | null => {
     if (!modelAResult || !modelBResult) return null;
-
+  
+    const modelADetails: ModelReportDetails = {
+      name: "Model A",
+      selectedModel: form.getValues("modelA_selectedModel") || "Custom",
+      architecture: form.getValues("modelA_architecture"),
+      dataSize: form.getValues("modelA_dataSize"),
+      predictedEnergyConsumption: modelAResult.predictedEnergyConsumption,
+      confidenceLevel: modelAResult.confidenceLevel,
+      parsedEnergyValue: modelAResult.parsedEnergyValue,
+      energyUnit: modelAResult.energyUnit,
+    };
+  
+    const modelBDetails: ModelReportDetails = {
+      name: "Model B",
+      selectedModel: form.getValues("modelB_selectedModel") || "Custom",
+      architecture: form.getValues("modelB_architecture"),
+      dataSize: form.getValues("modelB_dataSize"),
+      predictedEnergyConsumption: modelBResult.predictedEnergyConsumption,
+      confidenceLevel: modelBResult.confidenceLevel,
+      parsedEnergyValue: modelBResult.parsedEnergyValue,
+      energyUnit: modelBResult.energyUnit,
+    };
+  
     return {
-      reportTitle: "Model Energy Comparison Report",
+      reportTitle: `Comparison: ${modelADetails.architecture} vs ${modelBDetails.architecture}`,
       generatedAt: new Date().toISOString(),
-      modelA: {
-        name: "Model A",
-        selectedModel: form.getValues("modelA_selectedModel") || "Custom",
-        architecture: form.getValues("modelA_architecture"),
-        dataSize: form.getValues("modelA_dataSize"),
-        predictedEnergyConsumption: modelAResult.predictedEnergyConsumption,
-        confidenceLevel: modelAResult.confidenceLevel,
-        parsedEnergyValue: modelAResult.parsedEnergyValue,
-        energyUnit: modelAResult.energyUnit,
-      },
-      modelB: {
-        name: "Model B",
-        selectedModel: form.getValues("modelB_selectedModel") || "Custom",
-        architecture: form.getValues("modelB_architecture"),
-        dataSize: form.getValues("modelB_dataSize"),
-        predictedEnergyConsumption: modelBResult.predictedEnergyConsumption,
-        confidenceLevel: modelBResult.confidenceLevel,
-        parsedEnergyValue: modelBResult.parsedEnergyValue,
-        energyUnit: modelBResult.energyUnit,
-      },
+      modelA: modelADetails,
+      modelB: modelBDetails,
       comparisonSummary: {
         chartData: chartData,
       },
@@ -174,20 +182,26 @@ export function ModelComparisonView() {
     URL.revokeObjectURL(url);
   };
 
-  const handleSaveReport = () => {
-    const reportData = generateReportData();
-    if (reportData) {
-      downloadJSON(reportData, "model_comparison_report_saved.json");
-      toast({ title: "Report Saved", description: "The comparison report has been downloaded as a JSON file." });
-    } else {
+  const handleSaveReportToApp = () => {
+    const reportData = generateReportObject();
+    if (reportData && onSaveReport) {
+      onSaveReport(reportData);
+      toast({ title: "Report Saved to App", description: "The comparison report has been saved within the application." });
+    } else if (!reportData) {
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    } else if (!onSaveReport) {
+      toast({ title: "Save Error", description: "Cannot save report to app at this time.", variant: "destructive" });
     }
   };
 
-  const handleExportReport = () => {
-    const reportData = generateReportData();
+  const handleExportReportToJSON = () => {
+    const reportData = generateReportObject(); // Use the same object generation
     if (reportData) {
-      downloadJSON(reportData, "model_comparison_report_exported.json");
+      const fullReportDataWithIdForExport: SavedReport = {
+        ...reportData,
+        id: crypto.randomUUID(), // Generate an ID for the exported file if needed, or omit
+      };
+      downloadJSON(fullReportDataWithIdForExport, `aura_model_comparison_report_${new Date().toISOString().split('T')[0]}.json`);
       toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
     } else {
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
@@ -314,6 +328,7 @@ export function ModelComparisonView() {
               <Card className="bg-background/30">
                 <CardHeader><CardTitle className="text-lg text-accent">Model A Details</CardTitle></CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  <p><strong>Base Model:</strong> {form.getValues("modelA_selectedModel") || "Custom"}</p>
                   <p><strong>Architecture:</strong> {form.getValues("modelA_architecture")}</p>
                   <p><strong>Data Size:</strong> {form.getValues("modelA_dataSize")}</p>
                   <Separator className="my-2"/>
@@ -324,6 +339,7 @@ export function ModelComparisonView() {
               <Card className="bg-background/30">
                 <CardHeader><CardTitle className="text-lg text-accent">Model B Details</CardTitle></CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  <p><strong>Base Model:</strong> {form.getValues("modelB_selectedModel") || "Custom"}</p>
                   <p><strong>Architecture:</strong> {form.getValues("modelB_architecture")}</p>
                   <p><strong>Data Size:</strong> {form.getValues("modelB_dataSize")}</p>
                    <Separator className="my-2"/>
@@ -384,11 +400,11 @@ export function ModelComparisonView() {
             <Separator />
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button onClick={handleSaveReport} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
-                <Save className="mr-2 h-4 w-4" /> Save Report
+              <Button onClick={handleSaveReportToApp} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !onSaveReport}>
+                <Save className="mr-2 h-4 w-4" /> Save Report to App
               </Button>
-              <Button onClick={handleExportReport} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
-                <FileDown className="mr-2 h-4 w-4" /> Export Report
+              <Button onClick={handleExportReportToJSON} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
+                <FileDown className="mr-2 h-4 w-4" /> Download Report (JSON)
               </Button>
             </div>
           </CardContent>
