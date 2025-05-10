@@ -50,6 +50,11 @@
     --sidebar-accent-foreground: var(--primary); /* Primary color text on sidebar accent hover */
     --sidebar-border: 220 15% 88%;
     --sidebar-ring: var(--ring);
+
+    /* Animated Background Gradient Colors - Light Theme */
+    --background-gradient-start: 220 25% 97%; /* Lighter, softer cool grey */
+    --background-gradient-mid: 190 30% 96%;   /* Lighter, softer cyan-green */
+    --background-gradient-end: 250 20% 97%;   /* Lighter, softer lavender */
   }
 
   .dark:root {
@@ -93,6 +98,11 @@
     --sidebar-accent-foreground: var(--accent); /* Yellow text on sidebar accent hover */
     --sidebar-border: 220 15% 25%;
     --sidebar-ring: var(--ring);
+
+    /* Animated Background Gradient Colors - Dark Theme */
+    --background-gradient-start: 220 15% 12%; /* Deep dark blue */
+    --background-gradient-mid: 200 20% 15%;   /* Darker, muted cyan-blue */
+    --background-gradient-end: 240 15% 14%;   /* Dark, muted purple-blue */
   }
 }
 
@@ -102,5 +112,23 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  .animated-gradient-bg {
+    background: linear-gradient(-45deg, hsl(var(--background-gradient-start)), hsl(var(--background-gradient-mid)), hsl(var(--background-gradient-end)), hsl(var(--background-gradient-mid)));
+    background-size: 600% 600%;
+    animation: gradientBG 20s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 }

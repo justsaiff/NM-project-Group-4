@@ -15,8 +15,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={cn(poppins.variable, 'font-sans antialiased')}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn(
+          poppins.variable, 
+          'font-sans antialiased', 
+          'animated-gradient-bg' // Apply the animated gradient class
+        )}
+      >
         {children}
         <Toaster />
       </body>
