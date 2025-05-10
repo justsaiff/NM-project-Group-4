@@ -1,5 +1,5 @@
 
-import { Menu } from 'lucide-react';
+import { Menu, Zap } from 'lucide-react'; // Added Zap
 import type { LucideProps } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
@@ -24,10 +24,17 @@ export function AuraLogo({ className, iconClassName, textAlwaysVisible = false, 
       {...props}
     >
       <Menu className={cn("h-6 w-6", iconClassName)} />
-      <span className={cn(
-        "text-xl font-semibold text-foreground",
-        !textAlwaysVisible && "group-data-[state=collapsed]:hidden"
-      )}>Aura</span>
+      {textAlwaysVisible ? (
+        <div className="flex items-center gap-1">
+          <Zap className={cn("text-primary", iconClassName)} /> 
+          <span className="text-xl font-semibold text-foreground">Aura</span>
+        </div>
+      ) : (
+        <span className={cn(
+          "text-xl font-semibold text-foreground",
+          "group-data-[state=collapsed]:hidden" 
+        )}>Aura</span>
+      )}
     </button>
   );
 }
