@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -5,7 +6,6 @@ import { Moon, Sun } from "lucide-react";
 import * as React from "react";
 
 import { AuraLogo } from "@/components/aura-logo";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -19,6 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SheetTitle } from "@/components/ui/sheet"; // Ensured SheetTitle is imported for accessibility
 
 interface NavItem {
   id: string;
@@ -50,10 +51,10 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          <div className="flex items-center justify-between">
-            <AuraLogo className="w-8 h-8" />
-            {/* This trigger expands the sidebar when it's in icon-only mode on desktop */}
-            <SidebarTrigger className="hidden md:group-data-[collapsible=icon]:flex" />
+          {/* The AuraLogo now contains the Menu icon and acts as the primary sidebar toggle.
+              The redundant SidebarTrigger previously here has been removed. */}
+          <div className="flex items-center">
+            <AuraLogo iconClassName="h-6 w-6" />
           </div>
         </SidebarHeader>
         <SidebarContent className="p-2">
@@ -86,7 +87,7 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
       </Sidebar>
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          {/* This trigger is now always visible to toggle sidebar on all screen sizes */}
+          {/* This trigger is visible to toggle sidebar on all screen sizes from the main content area */}
           <SidebarTrigger /> 
           <h1 className="text-xl font-semibold text-foreground">
             {navItems.find(item => item.id === activeView)?.label || "Aura Dashboard"}
