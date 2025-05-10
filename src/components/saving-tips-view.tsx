@@ -1,70 +1,117 @@
 
-"use client";
+"use client"; // This directive is effectively for the child client components like TipItem if it had hooks.
+              // For the main async component part, it behaves as a Server Component.
 
+import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { Lightbulb, Cpu, Settings, Zap, Cloud, Filter, TrendingUp, Microscope } from "lucide-react";
+import { Lightbulb, Cpu, Settings, Zap, Cloud, Filter, TrendingUp, Microscope, AlertTriangle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { getSavingTipExplanation, type SavingTipExplanationOutput } from "@/ai/flows/saving-tip-explanation-flow";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 interface TipItemProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   title: string;
-  description: string;
+  description: string; // This will now be the AI-generated explanation or a fallback/loading state.
+  isLoading?: boolean;
+  hasError?: boolean;
 }
 
-const TipItem: React.FC<TipItemProps> = ({ icon: Icon, title, description }) => (
-  <div className="flex items-start gap-4 p-4 rounded-lg bg-background/30 shadow-sm hover:shadow-md transition-shadow">
-    <Icon className="w-8 h-8 text-accent flex-shrink-0 mt-1" />
-    <div>
-      <h4 className="text-md font-semibold text-primary">{title}</h4>
-      <p className="text-sm text-muted-foreground">{description}</p>
+const TipItem: React.FC<TipItemProps> = ({ icon: Icon, title, description, isLoading, hasError }) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-start gap-4 p-4 rounded-lg bg-background/30 shadow-sm">
+        <Skeleton className="w-8 h-8 rounded-md flex-shrink-0 mt-1" />
+        <div className="w-full">
+          <Skeleton className="h-5 w-3/4 mb-2 rounded-md" />
+          <Skeleton className="h-4 w-full mb-1 rounded-md" />
+          <Skeleton className="h-4 w-5/6 rounded-md" />
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="flex items-start gap-4 p-4 rounded-lg bg-background/30 shadow-sm hover:shadow-md transition-shadow">
+      <Icon className={`w-8 h-8 ${hasError ? 'text-destructive' : 'text-accent'} flex-shrink-0 mt-1`} />
+      <div>
+        <h4 className="text-md font-semibold text-primary">{title}</h4>
+        <p className="text-sm text-muted-foreground whitespace-pre-line">{description}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
+// Define static strategies (titles and icons)
+const baseSavingStrategies = [
+  {
+    icon: Filter,
+    title: "Optimizing Data Preprocessing",
+  },
+  {
+    icon: Cpu,
+    title: "Choosing Energy-Efficient Architectures",
+  },
+  {
+    icon: Zap,
+    title: "Hardware Acceleration Techniques",
+  },
+  {
+    icon: TrendingUp,
+    title: "Continuous Monitoring and Optimization",
+  },
+  {
+    icon: Settings, // Consider distinct icons if available and appropriate
+    title: "Efficient Training Strategies",
+  },
+  {
+    icon: Microscope,
+    title: "Model Pruning and Quantization",
+  },
+  {
+    icon: Settings, 
+    title: "Algorithm Selection and Hyperparameter Tuning",
+  },
+  {
+    icon: Cloud,
+    title: "Utilizing Cloud Efficiency Features",
+  },
+];
+
+interface StrategyWithContent extends TipItemProps {
+  // Inherits icon, title, description, isLoading, hasError
+}
 
 export function SavingTipsView() {
-  const savingStrategies = [
-    {
-      icon: Filter,
-      title: "Optimizing Data Preprocessing",
-      description: "Efficient data loading, cleaning, and augmentation pipelines are crucial. By streamlining these initial steps, you can significantly reduce computation time and energy consumption during both model training and inference. Consider using optimized libraries and lazy loading techniques.",
-    },
-    {
-      icon: Cpu,
-      title: "Choosing Energy-Efficient Architectures",
-      description: "Opt for lighter model architectures (e.g., MobileNets, SqueezeNets, or custom smaller networks) when feasible, especially for edge devices or applications where latency and power are critical. Evaluate the trade-off between model complexity and performance for your specific use case.",
-    },
-    {
-      icon: Zap,
-      title: "Hardware Acceleration Techniques",
-      description: "Leverage specialized hardware like GPUs, TPUs, or FPGAs designed for AI computations. Ensure your software stack and model are optimized to fully utilize these accelerators, for example, by using appropriate data types and batch sizes.",
-    },
-    {
-      icon: TrendingUp,
-      title: "Continuous Monitoring and Optimization",
-      description: "Regularly monitor the energy consumption, latency, and throughput of your deployed models. Use profiling tools to identify bottlenecks and collect data to inform further optimization efforts and track improvements over time.",
-    },
-    {
-      icon: Settings,
-      title: "Efficient Training Strategies",
-      description: "Employ techniques like transfer learning to leverage pre-trained models, mixed-precision training to reduce memory and computation, and distributed training with optimized communication protocols to shorten overall training time and energy expenditure.",
-    },
-    {
-      icon: Microscope,
-      title: "Model Pruning and Quantization",
-      description: "Pruning removes redundant weights/neurons, reducing model size and computational cost. Quantization converts weights/activations to lower precision (e.g., FP16, INT8), decreasing size and speeding up inference, often with minimal accuracy loss. Both are key for resource-constrained environments.",
-    },
-    {
-      icon: Settings, // Re-using icon, consider a more specific one if available for algorithms
-      title: "Algorithm Selection and Hyperparameter Tuning",
-      description: "Select algorithms inherently more efficient for your task. Systematically tune hyperparameters not just for accuracy but also for computational efficiency and energy usage. Explore automated hyperparameter optimization (HPO) tools.",
-    },
-    {
-      icon: Cloud,
-      title: "Utilizing Cloud Efficiency Features",
-      description: "Take advantage of cloud provider features like auto-scaling compute resources, using spot instances for fault-tolerant training workloads, and employing serverless functions for inference to match resource allocation closely with demand, minimizing idle energy usage and cost.",
-    },
-  ];
+  const [strategiesWithContent, setStrategiesWithContent] = React.useState<StrategyWithContent[]>(
+    baseSavingStrategies.map(strategy => ({ ...strategy, description: "", isLoading: true, hasError: false }))
+  );
+
+  React.useEffect(() => {
+    async function fetchExplanations() {
+      const explanationPromises = baseSavingStrategies.map(strategy =>
+        getSavingTipExplanation({ topic: strategy.title })
+          .then(output => ({ ...strategy, description: output.explanation, isLoading: false, hasError: false }))
+          .catch(error => {
+            console.error(`Failed to get explanation for ${strategy.title}:`, error);
+            return { 
+              ...strategy, 
+              description: "Could not load explanation for this tip. Please try again later.", 
+              isLoading: false, 
+              hasError: true,
+              icon: strategy.icon // Keep original icon, TipItem will handle color
+            };
+          })
+      );
+      
+      const settledStrategies = await Promise.all(explanationPromises);
+      setStrategiesWithContent(settledStrategies);
+    }
+
+    fetchExplanations();
+  }, []);
 
 
   return (
@@ -73,39 +120,45 @@ export function SavingTipsView() {
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary">
             <Lightbulb className="w-6 h-6" />
-            Energy Saving Tips for AI
+            AI-Powered Energy Saving Tips
           </CardTitle>
-          <CardDescription>Best practices to reduce your AI's energy footprint.</CardDescription>
+          <CardDescription>Best practices to reduce your AI's energy footprint, explained by Aura AI.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-muted-foreground">
             Discover actionable tips and best practices for designing, training, and deploying energy-efficient AI models.
-            Implementing these strategies can lead to significant reductions in energy consumption and operational costs.
+            Each explanation below is dynamically generated by an AI to provide you with detailed insights.
           </p>
           <div className="mt-4 relative h-56 w-full rounded-md overflow-hidden shadow-inner">
             <Image
-              src="https://picsum.photos/seed/aura-eco-ai/800/400"
-              alt="Sustainable AI and green computing concept"
+              src="https://picsum.photos/seed/aura-eco-ai-dynamic/800/400"
+              alt="Dynamic AI insights for green computing"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
               className="object-cover"
-              data-ai-hint="green technology"
+              data-ai-hint="AI brain"
               priority
             />
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 pt-4">
-            {savingStrategies.map((strategy, index) => (
-              <TipItem key={index} icon={strategy.icon} title={strategy.title} description={strategy.description} />
+            {strategiesWithContent.map((strategy, index) => (
+              <TipItem 
+                key={index} 
+                icon={strategy.hasError ? AlertTriangle : strategy.icon} 
+                title={strategy.title} 
+                description={strategy.description}
+                isLoading={strategy.isLoading}
+                hasError={strategy.hasError}
+              />
             ))}
           </div>
           
            <p className="text-sm text-muted-foreground pt-4 text-center">
-            Stay tuned for more in-depth guides and interactive tools for each strategy!
+            Content generated by Aura AI. Refresh to potentially see updated perspectives.
           </p>
         </CardContent>
       </Card>
     </div>
   );
 }
-
