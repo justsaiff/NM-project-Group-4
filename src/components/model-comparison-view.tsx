@@ -24,6 +24,7 @@ import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown, PlusCircle
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Added import for ScrollArea
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
