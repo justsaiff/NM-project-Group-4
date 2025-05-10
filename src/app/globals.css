@@ -4,14 +4,15 @@
 
 @layer base {
   :root {
-    --background: 220 15% 15%; /* Dark Slate Blue/Grey */
-    --foreground: 210 20% 90%; /* Light Greyish White */
+    /* Light Theme (Default) */
+    --background: 0 0% 100%; /* White */
+    --foreground: 220 10% 10%; /* Dark Slate Grey/Black */
 
-    --card: 220 15% 20%; /* Slightly Lighter Dark Slate */
-    --card-foreground: 210 20% 90%;
+    --card: 0 0% 98%; /* Off-White */
+    --card-foreground: 220 10% 10%;
 
-    --popover: 220 15% 12%; /* Darker for popovers */
-    --popover-foreground: 210 20% 90%;
+    --popover: 0 0% 97%; /* Slightly darker Off-White */
+    --popover-foreground: 220 10% 10%;
 
     --primary: 120 39% 50%; /* Green #4CAF50 */
     --primary-foreground: 120 39% 98%; /* Brighter White for contrast on Green */
@@ -19,17 +20,17 @@
     --secondary: 93 66% 67%; /* Light Green #80E275 */
     --secondary-foreground: 93 66% 10%; /* Dark Green for contrast on Light Green */
 
-    --muted: 220 15% 25%; /* Muted version of background */
-    --muted-foreground: 210 20% 65%; /* Muted version of foreground */
+    --muted: 220 15% 92%; /* Very Light Grey */
+    --muted-foreground: 220 10% 45%; /* Medium Dark Grey */
 
     --accent: 55 98% 61%; /* Yellow #FFEB3B */
     --accent-foreground: 55 98% 10%; /* Dark color for contrast on Yellow */
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 70% 55%; /* Red */
+    --destructive-foreground: 0 0% 98%; /* White */
 
-    --border: 220 15% 30%;
-    --input: 220 15% 25%;
+    --border: 220 15% 85%; /* Light Grey Border */
+    --input: 220 15% 95%; /* Very Light Grey Input background, distinct from card */
     --ring: 55 98% 61%; /* Accent yellow for rings */
 
     --radius: 0.5rem;
@@ -40,7 +41,50 @@
     --chart-4: 280 65% 60%; /* Purple */
     --chart-5: 340 75% 55%; /* Pink */
     
-    /* Sidebar specific colors */
+    /* Sidebar specific colors for Light Theme */
+    --sidebar-background: 220 20% 97%; /* Very Light Cool Grey */
+    --sidebar-foreground: 220 10% 25%; /* Darker text for Sidebar */
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: 220 15% 90%; /* Slightly darker than sidebar-bg for hover */
+    --sidebar-accent-foreground: var(--primary); /* Primary color text on sidebar accent hover */
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: var(--ring);
+  }
+
+  .dark:root {
+    /* Dark Theme */
+    --background: 220 15% 15%; /* Dark Slate Blue/Grey */
+    --foreground: 210 20% 90%; /* Light Greyish White */
+
+    --card: 220 15% 20%; /* Slightly Lighter Dark Slate */
+    --card-foreground: 210 20% 90%;
+
+    --popover: 220 15% 12%; /* Darker for popovers */
+    --popover-foreground: 210 20% 90%;
+
+    /* Primary, Secondary, Accent, Destructive, Ring, Charts can remain the same as they are defined to work on dark bg */
+    /* Or adjust if needed, but current ones are fine */
+    --primary: 120 39% 50%; 
+    --primary-foreground: 120 39% 98%;
+
+    --secondary: 93 66% 67%; 
+    --secondary-foreground: 93 66% 10%;
+
+    --muted: 220 15% 25%; /* Muted version of background */
+    --muted-foreground: 210 20% 65%; /* Muted version of foreground */
+
+    --accent: 55 98% 61%;
+    --accent-foreground: 55 98% 10%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 15% 30%;
+    --input: 220 15% 25%;
+    --ring: 55 98% 61%;
+
+    /* Sidebar specific colors for Dark Theme */
     --sidebar-background: 220 15% 18%;
     --sidebar-foreground: 210 20% 85%;
     --sidebar-primary: var(--primary);
@@ -50,8 +94,6 @@
     --sidebar-border: 220 15% 25%;
     --sidebar-ring: var(--ring);
   }
-
-  /* Remove .dark wrapper as dark is default now */
 }
 
 @layer base {
@@ -60,6 +102,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* font-family removed, will be handled by next/font and tailwind config */
   }
 }
