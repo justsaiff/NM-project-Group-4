@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -177,7 +178,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     };
   
     return {
-      reportTitle: `Comparison: ${modelADetails.architecture} vs ${modelBDetails.architecture}`,
+      reportTitle: `Comparison: ${modelADetails.architecture || 'Model A'} vs ${modelBDetails.architecture || 'Model B'}`,
       generatedAt: new Date().toISOString(),
       modelA: modelADetails,
       modelB: modelBDetails,
@@ -467,3 +468,4 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     </div>
   );
 }
+
