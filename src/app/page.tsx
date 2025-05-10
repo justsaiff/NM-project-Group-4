@@ -9,14 +9,13 @@ import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-ca
 import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
-import { ReportsView } from "@/components/reports-view"; // Import new ReportsView
+import { ReportsView } from "@/components/reports-view"; 
 import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import type { SavedReport } from "@/types/reports"; // Import SavedReport type
+import type { SavedReport } from "@/types/reports"; 
 
-// Add "reports" to the View type
 type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports";
 
 interface NavItem {
@@ -145,10 +144,42 @@ export default function HomePage() {
   const [activeView, setActiveView] = React.useState<View>("dashboard");
   const [savedReports, setSavedReports] = React.useState<SavedReport[]>([]);
 
+  // Load reports from localStorage on component mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedReports = localStorage.getItem("auraSavedReports");
+      if (storedReports) {
+        try {
+          const parsedReports = JSON.parse(storedReports);
+          // Basic validation to ensure it's an array
+          if (Array.isArray(parsedReports)) {
+            setSavedReports(parsedReports);
+          } else {
+            console.warn("Stored reports in localStorage is not an array. Initializing with empty array.");
+            setSavedReports([]);
+            localStorage.setItem("auraSavedReports", JSON.stringify([]));
+          }
+        } catch (error) {
+          console.error("Failed to parse reports from localStorage:", error);
+          setSavedReports([]); // Reset to empty array on error
+          localStorage.setItem("auraSavedReports", JSON.stringify([]));
+        }
+      }
+    }
+  }, []);
+
+  // Save reports to localStorage whenever savedReports state changes
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("auraSavedReports", JSON.stringify(savedReports));
+    }
+  }, [savedReports]);
+
+
   const handleSaveReport = (reportData: Omit<SavedReport, 'id'>) => {
     const newReport: SavedReport = {
       ...reportData,
-      id: crypto.randomUUID(), // Generate unique ID
+      id: crypto.randomUUID(), 
     };
     setSavedReports(prevReports => [...prevReports, newReport]);
   };
@@ -161,7 +192,7 @@ export default function HomePage() {
     { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") },
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
-    { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, // New "Reports" nav item
+    { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, 
   ];
 
   const renderView = () => {
@@ -177,9 +208,9 @@ export default function HomePage() {
       case "savingTips":
         return <SavingTipsView />;
       case "modelComparison":
-        return <ModelComparisonView onSaveReport={handleSaveReport} />; // Pass onSaveReport prop
+        return <ModelComparisonView onSaveReport={handleSaveReport} />; 
       case "reports":
-        return <ReportsView reports={savedReports} />; // New "Reports" view
+        return <ReportsView reports={savedReports} />; 
       default:
         return <DashboardView setActiveView={setActiveView} />;
     }
