@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
-import { GitCompareArrows, Loader2, FileDown, Save, Sheet as SheetIcon } from "lucide-react";
+import { GitCompareArrows, Loader2, FileDown, Save, Sheet as SheetIcon, ImageDown } from "lucide-react";
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
@@ -64,6 +64,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
   const [modelAResult, setModelAResult] = React.useState<ExtendedPredictionResult | null>(null);
   const [modelBResult, setModelBResult] = React.useState<ExtendedPredictionResult | null>(null);
   const { toast } = useToast();
+  const chartContainerRef = React.useRef<HTMLDivElement>(null);
 
   const form = useForm<ComparisonFormValues>({
     resolver: zodResolver(comparisonFormSchema),
@@ -241,6 +242,56 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       toast({ title: "Report Exported to CSV", description: "The comparison report has been downloaded as a CSV file." });
     } else {
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    }
+  };
+
+  const handleExportChartImage = () => {
+    if (chartContainerRef.current) {
+      const svgElement = chartContainerRef.current.querySelector('svg');
+      if (svgElement) {
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const svgClientRect = svgElement.getBoundingClientRect();
+          canvas.width = svgClientRect.width;
+          canvas.height = svgClientRect.height;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            // Set a background color for the PNG if desired, as SVG might be transparent
+            // Determine if dark mode is active to choose an appropriate background
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDarkMode ? '#2d3748' : '#ffffff'; // Example dark/light backgrounds
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = pngDataUrl;
+            a.download = `aura_comparison_chart_${new Date().toISOString().split('T')[0]}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            toast({ title: "Chart Exported", description: "Chart downloaded as PNG." });
+          } else {
+             toast({ title: "Chart Export Failed", description: "Could not get canvas context.", variant: "destructive" });
+          }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          toast({ title: "Chart Export Failed", description: "Error loading SVG image.", variant: "destructive" });
+        };
+        img.src = url;
+      } else {
+        toast({ title: "Chart Export Failed", description: "SVG element not found.", variant: "destructive" });
+      }
+    } else {
+      toast({ title: "Chart Export Failed", description: "Chart container not found.", variant: "destructive" });
     }
   };
 
@@ -425,7 +476,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
             <div>
               <h4 className="text-xl font-semibold text-primary mb-4">Energy Consumption Chart</h4>
               {chartData.length > 0 ? (
-                 <div className="h-[300px] w-full">
+                 <div className="h-[300px] w-full" ref={chartContainerRef}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -470,7 +521,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
             
             <Separator />
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 flex-wrap">
               <Button onClick={handleSaveReportToApp} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !onSaveReport}>
                 <Save className="mr-2 h-4 w-4" /> Save Report to App
               </Button>
@@ -479,6 +530,9 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               </Button>
               <Button onClick={handleExportReportToCSV} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
                 <SheetIcon className="mr-2 h-4 w-4" /> Export Report (CSV)
+              </Button>
+              <Button onClick={handleExportChartImage} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !chartData.length}>
+                <ImageDown className="mr-2 h-4 w-4" /> Download Chart (PNG)
               </Button>
             </div>
           </CardContent>

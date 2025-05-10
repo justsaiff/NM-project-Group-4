@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FileText, Eye, Download, Sheet as SheetIcon } from "lucide-react";
+import { FileText, Eye, Download, Sheet as SheetIcon, ImageDown } from "lucide-react";
 import { format } from 'date-fns';
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv, frameworkNameMapping as csvFrameworkNameMapping } from "@/lib/csv-utils";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface ReportsViewProps {
@@ -23,16 +24,6 @@ const ReportDetailItem: React.FC<{ label: string; value: string | number | undef
     <strong className="text-muted-foreground">{label}:</strong> {value ?? 'N/A'}
   </p>
 );
-
-// Use the mapping from csv-utils or define locally if it's preferred to keep it separate
-// For consistency, it's better if csv-utils exports it or it's defined in a shared types/constants file.
-// Assuming csvFrameworkNameMapping is imported from csv-utils for this example.
-// const frameworkNameMapping: { [key: string]: string } = {
-//   tensorflow: "TensorFlow",
-//   pytorch: "PyTorch",
-//   "scikit-learn": "scikit-learn",
-//   other: "Other/Custom"
-// };
 
 const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> = ({ model, title }) => (
   <Card className="bg-background/50 flex-1">
@@ -56,6 +47,8 @@ const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> =
 export function ReportsView({ reports }: ReportsViewProps) {
   const [selectedReport, setSelectedReport] = React.useState<SavedReport | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = React.useState(false);
+  const dialogChartContainerRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const handleViewDetails = (report: SavedReport) => {
     setSelectedReport(report);
@@ -83,6 +76,58 @@ export function ReportsView({ reports }: ReportsViewProps) {
     const csvDataArray = convertReportToCsvDataArray(report);
     const csvString = arrayToCsv(csvDataArray);
     downloadCsv(csvString, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.csv`);
+  };
+
+  const handleDownloadDialogChartImage = () => {
+    if (!selectedReport) {
+      toast({ title: "Chart Export Failed", description: "No report selected.", variant: "destructive" });
+      return;
+    }
+    if (dialogChartContainerRef.current) {
+      const svgElement = dialogChartContainerRef.current.querySelector('svg');
+      if (svgElement) {
+        const svgString = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const svgClientRect = svgElement.getBoundingClientRect();
+          canvas.width = svgClientRect.width;
+          canvas.height = svgClientRect.height;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDarkMode ? '#1f2937' : '#ffffff'; // Example dark/light backgrounds
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = pngDataUrl;
+            a.download = `aura_report_chart_${selectedReport.id.substring(0,8)}_${new Date(selectedReport.generatedAt).toISOString().split('T')[0]}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            toast({ title: "Chart Exported", description: "Chart downloaded as PNG." });
+          } else {
+            toast({ title: "Chart Export Failed", description: "Could not get canvas context.", variant: "destructive" });
+          }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          toast({ title: "Chart Export Failed", description: "Error loading SVG image.", variant: "destructive" });
+        };
+        img.src = url;
+      } else {
+        toast({ title: "Chart Export Failed", description: "SVG element not found in dialog.", variant: "destructive" });
+      }
+    } else {
+      toast({ title: "Chart Export Failed", description: "Dialog chart container not found.", variant: "destructive" });
+    }
   };
   
   const primaryUnit = selectedReport?.modelA?.energyUnit || selectedReport?.modelB?.energyUnit || "units";
@@ -128,7 +173,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
                         Generated: {format(new Date(report.generatedAt), "PPP p")}
                     </CardDescription>
                     </CardHeader>
-                    <CardFooter className="flex justify-end gap-2">
+                    <CardFooter className="flex justify-end gap-2 flex-wrap">
                      <Button variant="outline" size="sm" onClick={() => handleDownloadReportJSON(report)}>
                         <Download className="mr-2 h-4 w-4" /> JSON
                       </Button>
@@ -168,7 +213,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
                 <div>
                   <h4 className="text-xl font-semibold text-primary mb-4">Energy Consumption Chart</h4>
                   {selectedReport.comparisonSummary.chartData.length > 0 ? (
-                    <div className="h-[300px] w-full">
+                    <div className="h-[300px] w-full" ref={dialogChartContainerRef}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={selectedReport.comparisonSummary.chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -211,14 +256,21 @@ export function ReportsView({ reports }: ReportsViewProps) {
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="p-6 border-t sm:justify-start gap-2">
+            <DialogFooter className="p-6 border-t sm:justify-start gap-2 flex-wrap">
                <Button variant="outline" onClick={() => handleDownloadReportJSON(selectedReport)}>
                 <Download className="mr-2 h-4 w-4" /> Download JSON
               </Button>
               <Button variant="outline" onClick={() => handleDownloadReportCSV(selectedReport)}>
                 <SheetIcon className="mr-2 h-4 w-4" /> Export CSV
               </Button>
-              <DialogClose asChild className="sm:ml-auto">
+              <Button 
+                variant="outline" 
+                onClick={handleDownloadDialogChartImage}
+                disabled={!selectedReport || !selectedReport.comparisonSummary.chartData.length}
+              >
+                <ImageDown className="mr-2 h-4 w-4" /> Download Chart (PNG)
+              </Button>
+              <DialogClose asChild className="sm:ml-auto mt-2 sm:mt-0">
                 <Button variant="secondary">Close</Button>
               </DialogClose>
             </DialogFooter>
