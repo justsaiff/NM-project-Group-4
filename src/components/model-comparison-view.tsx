@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
@@ -27,11 +28,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
 
-const MIN_MODELS_TO_COMPARE = 1; // Minimum number of models to keep
-const DEFAULT_MODELS_COUNT = 2; // Default number of models on initial load
+const MIN_MODELS_TO_COMPARE = 1; 
+const DEFAULT_MODELS_COUNT = 2; 
 
 const modelInputSchema = z.object({
-  id: z.string().optional(), // For useFieldArray key
+  id: z.string().optional(), 
   selectedModel: z.string().optional(),
   selectedFramework: z.string().optional(), 
   architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
@@ -73,6 +74,7 @@ const createDefaultModelInput = (): ModelInputValue => ({
 export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [comparisonResults, setComparisonResults] = React.useState<ModelReportDetails[] | null>(null);
+  const [numberOfModelsInput, setNumberOfModelsInput] = React.useState<string>(String(DEFAULT_MODELS_COUNT));
   const { toast } = useToast();
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -87,6 +89,14 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     control: form.control,
     name: "models",
   });
+
+  // Update input field if the actual number of models (fields.length) changes
+  React.useEffect(() => {
+    const currentModelCount = parseInt(numberOfModelsInput, 10);
+    if (isNaN(currentModelCount) || currentModelCount !== fields.length) {
+        setNumberOfModelsInput(String(fields.length));
+    }
+  }, [fields.length, numberOfModelsInput]);
 
   // Effect to auto-fill architecture based on selected model and framework
   React.useEffect(() => {
@@ -114,6 +124,36 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       }
     });
   }, [form, fields]);
+
+
+  const handleSetNumberOfModels = () => {
+    let targetNum = parseInt(numberOfModelsInput, 10);
+
+    if (isNaN(targetNum) || targetNum < MIN_MODELS_TO_COMPARE) {
+      toast({
+        title: "Invalid Number",
+        description: `Number of models must be at least ${MIN_MODELS_TO_COMPARE}. Adjusting to ${MIN_MODELS_TO_COMPARE}.`,
+        variant: "destructive",
+      });
+      targetNum = MIN_MODELS_TO_COMPARE;
+      setNumberOfModelsInput(String(targetNum)); // Update input display to reflect validated number
+    }
+
+    const currentCount = fields.length;
+    if (targetNum === currentCount) return; 
+
+    if (targetNum > currentCount) {
+      const diff = targetNum - currentCount;
+      for (let i = 0; i < diff; i++) {
+        append(createDefaultModelInput(), { shouldFocus: false });
+      }
+    } else { // targetNum < currentCount
+      const diff = currentCount - targetNum;
+      for (let i =0; i < diff; i++) {
+         remove(fields.length - 1); 
+      }
+    }
+  };
 
 
   async function onSubmit(values: ComparisonFormValues) {
@@ -200,7 +240,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     if (reportData) {
       const fullReportDataWithIdForExport: SavedReport = {
         ...reportData,
-        id: crypto.randomUUID(),
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `report-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       };
       const csvDataArray = convertReportToCsvDataArray(fullReportDataWithIdForExport);
       const csvString = arrayToCsv(csvDataArray);
@@ -269,6 +309,21 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
           <CardDescription>
             Input details for multiple AI models to compare their estimated energy consumption.
           </CardDescription>
+          <div className="flex items-center gap-2 pt-4">
+            <Label htmlFor="numModelsInput" className="text-sm text-muted-foreground whitespace-nowrap">Number of Models:</Label>
+            <Input
+              id="numModelsInput"
+              type="number"
+              min={MIN_MODELS_TO_COMPARE}
+              value={numberOfModelsInput}
+              onChange={(e) => setNumberOfModelsInput(e.target.value)}
+              onBlur={handleSetNumberOfModels} // Or use a button
+              className="w-20 bg-input h-9"
+            />
+            <Button type="button" onClick={handleSetNumberOfModels} variant="outline" size="sm">
+              Set
+            </Button>
+          </div>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -294,7 +349,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                     <FormField
                       control={form.control}
                       name={`models.${index}.selectedFramework`}
-                      render={({ field: controllerField }) => ( // Renamed to avoid conflict
+                      render={({ field: controllerField }) => ( 
                         <FormItem>
                           <FrameworkSelector
                             selectedFramework={controllerField.value}
@@ -356,7 +411,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               </Button>
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 items-center">
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto max-w-xs bg-primary hover:bg-primary/90">
+              <Button type="submit" disabled={isLoading || fields.length < MIN_MODELS_TO_COMPARE} className="w-full sm:w-auto max-w-xs bg-primary hover:bg-primary/90">
                 {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Comparing...</> : `Compare ${fields.length} Model(s)`}
               </Button>
             </CardFooter>
