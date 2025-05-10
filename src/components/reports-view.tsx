@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FileText, Eye, Download, Sheet, ImageDown } from "lucide-react"; // Changed SheetIcon to Sheet
+import { FileText, Eye, Download, Sheet, ImageDown } from "lucide-react";
 import { format } from 'date-fns';
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv, frameworkNameMapping } from "@/lib/csv-utils";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,7 @@ const ReportDetailItem: React.FC<{ label: string; value: string | number | undef
 );
 
 const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> = ({ model, title }) => (
-  <Card className="bg-background/50 flex-1">
+  <Card className="bg-background/50 flex-1 min-w-[280px]"> {/* Added min-w for better layout in flex */}
     <CardHeader>
       <CardTitle className="text-lg text-accent">{title}</CardTitle>
     </CardHeader>
@@ -62,21 +62,6 @@ export function ReportsView({ reports }: ReportsViewProps) {
     toast({ title: "Report Exported", description: "The report has been downloaded as a CSV file." });
   };
   
-  // Kept JSON download function in case it's needed elsewhere or for future use, but not wired to UI
-  const downloadJSON_NotUsed = (data: object, filename: string) => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-
   const handleDownloadDialogChartImage = () => {
     if (!selectedReport) {
       toast({ title: "Chart Export Failed", description: "No report selected.", variant: "destructive" });
@@ -129,7 +114,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
     }
   };
   
-  const primaryUnit = selectedReport?.modelA?.energyUnit || selectedReport?.modelB?.energyUnit || "units";
+  const primaryUnit = selectedReport?.models[0]?.energyUnit || "units";
 
 
   if (reports.length === 0) {
@@ -199,9 +184,10 @@ export function ReportsView({ reports }: ReportsViewProps) {
             
             <ScrollArea className="flex-1 overflow-y-auto">
               <div className="p-6 space-y-6">
-                <div className="flex flex-col md:flex-row gap-6">
-                  <ModelDetailsCard model={selectedReport.modelA} title="Model A Details" />
-                  <ModelDetailsCard model={selectedReport.modelB} title="Model B Details" />
+                <div className="flex flex-col md:flex-row flex-wrap gap-6"> {/* Added flex-wrap */}
+                  {selectedReport.models.map((model, index) => (
+                     <ModelDetailsCard key={index} model={model} title={model.name || `Model ${index + 1}`} />
+                  ))}
                 </div>
 
                 <Separator />
@@ -239,7 +225,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
                             labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
                           />
                           <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }} />
-                          <Bar dataKey="energy" name="Energy" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} barSize={40} />
+                          <Bar dataKey="energy" name="Energy" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} barSize={Math.max(20, 80 / selectedReport.comparisonSummary.chartData.length)} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

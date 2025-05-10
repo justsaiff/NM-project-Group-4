@@ -1,10 +1,9 @@
 
-
 "use client";
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
-import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown } from "lucide-react"; // Changed SheetIcon to Sheet
+import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown, PlusCircle, XCircle } from "lucide-react";
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
@@ -28,17 +27,21 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
 
+const MIN_MODELS_TO_COMPARE = 1; // Minimum number of models to keep
+const DEFAULT_MODELS_COUNT = 2; // Default number of models on initial load
+
+const modelInputSchema = z.object({
+  id: z.string().optional(), // For useFieldArray key
+  selectedModel: z.string().optional(),
+  selectedFramework: z.string().optional(), 
+  architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
+  dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
+});
+
+type ModelInputValue = z.infer<typeof modelInputSchema>;
 
 const comparisonFormSchema = z.object({
-  modelA_selectedModel: z.string().optional(),
-  modelA_selectedFramework: z.string().optional(), 
-  modelA_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
-  modelA_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
-  
-  modelB_selectedModel: z.string().optional(),
-  modelB_selectedFramework: z.string().optional(), 
-  modelB_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
-  modelB_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
+  models: z.array(modelInputSchema).min(MIN_MODELS_TO_COMPARE, `Please configure at least ${MIN_MODELS_TO_COMPARE} model.`),
 });
 
 type ComparisonFormValues = z.infer<typeof comparisonFormSchema>;
@@ -59,77 +62,89 @@ interface ModelComparisonViewProps {
   onSaveReport?: (report: Omit<SavedReport, 'id'>) => void; 
 }
 
+const createDefaultModelInput = (): ModelInputValue => ({
+  architecture: "",
+  dataSize: "",
+  selectedModel: undefined,
+  selectedFramework: undefined,
+});
+
+
 export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) {
   const [isLoading, setIsLoading] = React.useState(false);
-  const [modelAResult, setModelAResult] = React.useState<ExtendedPredictionResult | null>(null);
-  const [modelBResult, setModelBResult] = React.useState<ExtendedPredictionResult | null>(null);
+  const [comparisonResults, setComparisonResults] = React.useState<ModelReportDetails[] | null>(null);
   const { toast } = useToast();
   const chartContainerRef = React.useRef<HTMLDivElement>(null);
 
   const form = useForm<ComparisonFormValues>({
     resolver: zodResolver(comparisonFormSchema),
     defaultValues: {
-      modelA_architecture: "",
-      modelA_dataSize: "",
-      modelA_selectedModel: undefined,
-      modelA_selectedFramework: undefined,
-      modelB_architecture: "",
-      modelB_dataSize: "",
-      modelB_selectedModel: undefined,
-      modelB_selectedFramework: undefined,
+      models: Array(DEFAULT_MODELS_COUNT).fill(null).map(() => createDefaultModelInput()),
     },
   });
 
-  const modelASelected = form.watch("modelA_selectedModel");
-  const modelAFramework = form.watch("modelA_selectedFramework");
-  const modelBSelected = form.watch("modelB_selectedModel");
-  const modelBFramework = form.watch("modelB_selectedFramework");
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "models",
+  });
 
+  // Effect to auto-fill architecture based on selected model and framework
   React.useEffect(() => {
-    if (modelASelected) {
-      let arch = form.getValues("modelA_architecture") || "";
-      let framework = modelAFramework;
-      if (modelASelected.includes("resnet")) { arch = "CNN (ResNet-like)"; if(!framework) framework = "tensorflow"; }
-      else if (modelASelected.includes("bert")) { arch = "Transformer (BERT-like)"; if(!framework) framework = "pytorch"; }
-      else if (modelASelected.includes("gpt")) { arch = "Transformer (GPT-like)"; if(!framework) framework = "pytorch"; }
-      else if (modelASelected.includes("skl_")) { if(!framework) framework = "scikit-learn"; }
-      form.setValue("modelA_architecture", arch);
-      if(framework && framework !== modelAFramework) form.setValue("modelA_selectedFramework", framework);
-    }
-  }, [modelASelected, modelAFramework, form]);
+    fields.forEach((_field, index) => {
+      const modelPath = `models.${index}.selectedModel` as const;
+      const frameworkPath = `models.${index}.selectedFramework` as const;
+      const archPath = `models.${index}.architecture` as const;
+      
+      const selectedModel = form.watch(modelPath);
+      const currentFramework = form.watch(frameworkPath);
+      
+      if (selectedModel) {
+        let arch = form.getValues(archPath) || "";
+        let frameworkToSet = currentFramework;
 
-  React.useEffect(() => {
-    if (modelBSelected) {
-      let arch = form.getValues("modelB_architecture") || "";
-      let framework = modelBFramework;
-      if (modelBSelected.includes("resnet")) { arch = "CNN (ResNet-like)"; if(!framework) framework = "tensorflow"; }
-      else if (modelBSelected.includes("bert")) { arch = "Transformer (BERT-like)"; if(!framework) framework = "pytorch"; }
-      else if (modelBSelected.includes("gpt")) { arch = "Transformer (GPT-like)"; if(!framework) framework = "pytorch"; }
-      else if (modelBSelected.includes("skl_")) { if(!framework) framework = "scikit-learn"; }
-      form.setValue("modelB_architecture", arch);
-      if(framework && framework !== modelBFramework) form.setValue("modelB_selectedFramework", framework);
-    }
-  }, [modelBSelected, modelBFramework, form]);
+        if (selectedModel.includes("resnet")) { arch = "CNN (ResNet-like)"; if(!frameworkToSet) frameworkToSet = "tensorflow"; }
+        else if (selectedModel.includes("bert")) { arch = "Transformer (BERT-like)"; if(!frameworkToSet) frameworkToSet = "pytorch"; }
+        else if (selectedModel.includes("gpt")) { arch = "Transformer (GPT-like)"; if(!frameworkToSet) frameworkToSet = "pytorch"; }
+        else if (selectedModel.includes("skl_")) { if(!frameworkToSet) frameworkToSet = "scikit-learn"; }
+        
+        form.setValue(archPath, arch, { shouldValidate: true });
+        if(frameworkToSet && frameworkToSet !== currentFramework) {
+            form.setValue(frameworkPath, frameworkToSet, { shouldValidate: true });
+        }
+      }
+    });
+  }, [form, fields]);
 
 
   async function onSubmit(values: ComparisonFormValues) {
     setIsLoading(true);
-    setModelAResult(null);
-    setModelBResult(null);
+    setComparisonResults(null);
 
     try {
-      const [resultA, resultB] = await Promise.all([
-        energyPrediction({ modelArchitecture: values.modelA_architecture, dataSize: values.modelA_dataSize }),
-        energyPrediction({ modelArchitecture: values.modelB_architecture, dataSize: values.modelB_dataSize })
-      ]);
+      const predictionPromises = values.models.map(modelInput => 
+        energyPrediction({ modelArchitecture: modelInput.architecture, dataSize: modelInput.dataSize })
+      );
       
-      const parsedA = parseEnergyValueAndUnit(resultA.predictedEnergyConsumption);
-      setModelAResult({ ...resultA, parsedEnergyValue: parsedA.value, energyUnit: parsedA.unit });
+      const results = await Promise.all(predictionPromises);
+      
+      const detailedResults: ModelReportDetails[] = results.map((result, index) => {
+        const parsed = parseEnergyValueAndUnit(result.predictedEnergyConsumption);
+        const modelInput = values.models[index];
+        return {
+          name: `Model ${index + 1}`,
+          selectedModel: modelInput.selectedModel || "Custom",
+          selectedFramework: modelInput.selectedFramework,
+          architecture: modelInput.architecture,
+          dataSize: modelInput.dataSize,
+          predictedEnergyConsumption: result.predictedEnergyConsumption,
+          confidenceLevel: result.confidenceLevel,
+          parsedEnergyValue: parsed.value,
+          energyUnit: parsed.unit,
+        };
+      });
 
-      const parsedB = parseEnergyValueAndUnit(resultB.predictedEnergyConsumption);
-      setModelBResult({ ...resultB, parsedEnergyValue: parsedB.value, energyUnit: parsedB.unit });
-
-      toast({ title: "Comparison Ready", description: "Energy predictions for both models are available." });
+      setComparisonResults(detailedResults);
+      toast({ title: "Comparison Ready", description: `Energy predictions for ${detailedResults.length} models are available.` });
     } catch (error) {
       console.error("Comparison error:", error);
       toast({
@@ -143,47 +158,25 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
   }
 
   const chartData = React.useMemo((): ReportChartData[] => {
-    if (!modelAResult || !modelBResult) return [];
-    return [
-      { name: "Model A", energy: modelAResult.parsedEnergyValue, unit: modelAResult.energyUnit },
-      { name: "Model B", energy: modelBResult.parsedEnergyValue, unit: modelBResult.energyUnit },
-    ];
-  }, [modelAResult, modelBResult]);
+    if (!comparisonResults) return [];
+    return comparisonResults.map(model => ({
+      name: model.name,
+      energy: model.parsedEnergyValue,
+      unit: model.energyUnit,
+    }));
+  }, [comparisonResults]);
   
-  const primaryUnit = modelAResult?.energyUnit || modelBResult?.energyUnit || "units";
+  const primaryUnit = comparisonResults?.[0]?.energyUnit || "units";
 
   const generateReportObject = (): Omit<SavedReport, 'id'> | null => {
-    if (!modelAResult || !modelBResult) return null;
-  
-    const modelADetails: ModelReportDetails = {
-      name: "Model A",
-      selectedModel: form.getValues("modelA_selectedModel") || "Custom",
-      selectedFramework: form.getValues("modelA_selectedFramework"),
-      architecture: form.getValues("modelA_architecture"),
-      dataSize: form.getValues("modelA_dataSize"),
-      predictedEnergyConsumption: modelAResult.predictedEnergyConsumption,
-      confidenceLevel: modelAResult.confidenceLevel,
-      parsedEnergyValue: modelAResult.parsedEnergyValue,
-      energyUnit: modelAResult.energyUnit,
-    };
-  
-    const modelBDetails: ModelReportDetails = {
-      name: "Model B",
-      selectedModel: form.getValues("modelB_selectedModel") || "Custom",
-      selectedFramework: form.getValues("modelB_selectedFramework"),
-      architecture: form.getValues("modelB_architecture"),
-      dataSize: form.getValues("modelB_dataSize"),
-      predictedEnergyConsumption: modelBResult.predictedEnergyConsumption,
-      confidenceLevel: modelBResult.confidenceLevel,
-      parsedEnergyValue: modelBResult.parsedEnergyValue,
-      energyUnit: modelBResult.energyUnit,
-    };
+    if (!comparisonResults || comparisonResults.length === 0) return null;
+    
+    const modelNames = comparisonResults.map(m => m.architecture || m.name).join(" vs ");
   
     return {
-      reportTitle: `Comparison: ${modelADetails.architecture || 'Model A'} vs ${modelBDetails.architecture || 'Model B'}`,
+      reportTitle: `Comparison: ${modelNames}`,
       generatedAt: new Date().toISOString(),
-      modelA: modelADetails,
-      modelB: modelBDetails,
+      models: comparisonResults,
       comparisonSummary: {
         chartData: chartData,
       },
@@ -194,11 +187,11 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     const reportData = generateReportObject();
     if (reportData && onSaveReport) {
       onSaveReport(reportData);
-      toast({ title: "Report Saved to App", description: "The comparison report has been saved within the application." });
+      toast({ title: "Report Saved to App", description: "The comparison report has been saved." });
     } else if (!reportData) {
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
     } else if (!onSaveReport) {
-      toast({ title: "Save Error", description: "Cannot save report to app at this time.", variant: "destructive" });
+      toast({ title: "Save Error", description: "Cannot save report to app.", variant: "destructive" });
     }
   };
 
@@ -212,40 +205,11 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       const csvDataArray = convertReportToCsvDataArray(fullReportDataWithIdForExport);
       const csvString = arrayToCsv(csvDataArray);
       downloadCsv(csvString, `aura_model_comparison_report_${new Date(fullReportDataWithIdForExport.generatedAt).toISOString().split('T')[0]}.csv`);
-      toast({ title: "Report Exported to CSV", description: "The comparison report has been downloaded as a CSV file." });
+      toast({ title: "Report Exported to CSV", description: "Downloaded as CSV." });
     } else {
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
     }
   };
-  
-  // Kept JSON download function in case it's needed elsewhere or for future use, but not wired to UI
-  const downloadJSON = (data: object, filename: string) => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleExportReportToJSON_NotUsed = () => { // Renamed to indicate it's not used by UI
-    const reportData = generateReportObject(); 
-    if (reportData) {
-      const fullReportDataWithIdForExport: SavedReport = {
-        ...reportData,
-        id: crypto.randomUUID(), 
-      };
-      downloadJSON(fullReportDataWithIdForExport, `aura_model_comparison_report_${new Date().toISOString().split('T')[0]}.json`);
-      toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
-    } else {
-      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
-    }
-  };
-
 
   const handleExportChartImage = () => {
     if (chartContainerRef.current) {
@@ -295,7 +259,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     }
   };
 
-
   return (
     <div className="space-y-8">
       <Card className="bg-card text-card-foreground shadow-xl">
@@ -304,172 +267,129 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
             <GitCompareArrows className="w-6 h-6" /> Model Energy Comparison
           </CardTitle>
           <CardDescription>
-            Input details for two AI models to compare their estimated energy consumption.
+            Input details for multiple AI models to compare their estimated energy consumption.
           </CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Model A Inputs */}
-                <div className="space-y-4 p-4 border rounded-lg bg-background/30 shadow-sm">
-                  <h3 className="text-lg font-semibold text-primary">Model A</h3>
-                  <FormField
-                    control={form.control}
-                    name="modelA_selectedFramework"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FrameworkSelector
-                          selectedFramework={field.value}
-                          onFrameworkChange={field.onChange}
-                          label="Model A Framework"
-                          idSuffix="modelA"
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="modelA_selectedModel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <ModelSelector 
-                          selectedModel={field.value} 
-                          onModelChange={field.onChange} 
-                          label="Optional: Select Base Model A"
-                        />
-                         <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="modelA_architecture"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model A Architecture</FormLabel>
-                        <FormControl><Input placeholder="e.g., Transformer, CNN" {...field} className="bg-input"/></FormControl>
-                         <FormDescription>Ensure this reflects the selected framework if any.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="modelA_dataSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model A Data Size</FormLabel>
-                        <FormControl><Input placeholder="e.g., 1GB, 500MB" {...field} className="bg-input"/></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Model B Inputs */}
-                <div className="space-y-4 p-4 border rounded-lg bg-background/30 shadow-sm">
-                  <h3 className="text-lg font-semibold text-primary">Model B</h3>
-                  <FormField
-                    control={form.control}
-                    name="modelB_selectedFramework"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FrameworkSelector
-                          selectedFramework={field.value}
-                          onFrameworkChange={field.onChange}
-                          label="Model B Framework"
-                          idSuffix="modelB"
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                   <FormField
-                    control={form.control}
-                    name="modelB_selectedModel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <ModelSelector 
-                          selectedModel={field.value} 
-                          onModelChange={field.onChange} 
-                          label="Optional: Select Base Model B"
-                        />
-                        <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="modelB_architecture"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model B Architecture</FormLabel>
-                        <FormControl><Input placeholder="e.g., Transformer, CNN" {...field} className="bg-input"/></FormControl>
-                        <FormDescription>Ensure this reflects the selected framework if any.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="modelB_dataSize"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model B Data Size</FormLabel>
-                        <FormControl><Input placeholder="e.g., 1GB, 500MB" {...field} className="bg-input"/></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              {fields.map((field, index) => (
+                <Card key={field.id} className="p-4 bg-background/30 shadow-sm relative">
+                   <div className="flex justify-between items-center mb-2">
+                     <h3 className="text-lg font-semibold text-primary">Model {index + 1}</h3>
+                     {fields.length > MIN_MODELS_TO_COMPARE && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(index)}
+                          className="text-destructive hover:text-destructive/80 absolute top-2 right-2"
+                          aria-label={`Remove Model ${index + 1}`}
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </Button>
+                      )}
+                   </div>
+                  <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
+                    <FormField
+                      control={form.control}
+                      name={`models.${index}.selectedFramework`}
+                      render={({ field: controllerField }) => ( // Renamed to avoid conflict
+                        <FormItem>
+                          <FrameworkSelector
+                            selectedFramework={controllerField.value}
+                            onFrameworkChange={controllerField.onChange}
+                            label="Framework"
+                            idSuffix={`model${index}`}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`models.${index}.selectedModel`}
+                      render={({ field: controllerField }) => (
+                        <FormItem>
+                          <ModelSelector 
+                            selectedModel={controllerField.value} 
+                            onModelChange={controllerField.onChange} 
+                            label="Optional: Base Model"
+                          />
+                          <FormDescription>May pre-fill architecture.</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`models.${index}.architecture`}
+                      render={({ field: controllerField }) => (
+                        <FormItem className="md:col-span-1">
+                          <FormLabel>Architecture</FormLabel>
+                          <FormControl><Input placeholder="e.g., Transformer, CNN" {...controllerField} className="bg-input"/></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`models.${index}.dataSize`}
+                      render={({ field: controllerField }) => (
+                        <FormItem className="md:col-span-1">
+                          <FormLabel>Data Size</FormLabel>
+                          <FormControl><Input placeholder="e.g., 1GB, 500MB" {...controllerField} className="bg-input"/></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </Card>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => append(createDefaultModelInput())}
+                className="w-full mt-4"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Another Model
+              </Button>
             </CardContent>
-            <CardFooter className="flex justify-center">
-              <Button type="submit" disabled={isLoading} className="w-full max-w-xs bg-primary hover:bg-primary/90">
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Comparing...</> : "Compare Models"}
+            <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 items-center">
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto max-w-xs bg-primary hover:bg-primary/90">
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Comparing...</> : `Compare ${fields.length} Model(s)`}
               </Button>
             </CardFooter>
           </form>
         </Form>
       </Card>
 
-      {modelAResult && modelBResult && (
+      {comparisonResults && comparisonResults.length > 0 && (
         <Card className="bg-card text-card-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-500">
           <CardHeader>
             <CardTitle className="text-2xl text-primary">Comparison Results</CardTitle>
-            <CardDescription>Side-by-side energy prediction and key differences.</CardDescription>
+            <CardDescription>Side-by-side energy prediction and key differences for {comparisonResults.length} models.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-background/30">
-                <CardHeader><CardTitle className="text-lg text-accent">Model A Details</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p><strong>Framework:</strong> {form.getValues("modelA_selectedFramework")?.toUpperCase() || "N/A"}</p>
-                  <p><strong>Base Model:</strong> {form.getValues("modelA_selectedModel") || "Custom"}</p>
-                  <p><strong>Architecture:</strong> {form.getValues("modelA_architecture")}</p>
-                  <p><strong>Data Size:</strong> {form.getValues("modelA_dataSize")}</p>
-                  <Separator className="my-2"/>
-                  <p><strong>Predicted Energy:</strong> <span className="font-semibold text-accent">{modelAResult.predictedEnergyConsumption}</span></p>
-                  <p><strong>Confidence:</strong> {modelAResult.confidenceLevel}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-background/30">
-                <CardHeader><CardTitle className="text-lg text-accent">Model B Details</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p><strong>Framework:</strong> {form.getValues("modelB_selectedFramework")?.toUpperCase() || "N/A"}</p>
-                  <p><strong>Base Model:</strong> {form.getValues("modelB_selectedModel") || "Custom"}</p>
-                  <p><strong>Architecture:</strong> {form.getValues("modelB_architecture")}</p>
-                  <p><strong>Data Size:</strong> {form.getValues("modelB_dataSize")}</p>
-                   <Separator className="my-2"/>
-                  <p><strong>Predicted Energy:</strong> <span className="font-semibold text-accent">{modelBResult.predictedEnergyConsumption}</span></p>
-                  <p><strong>Confidence:</strong> {modelBResult.confidenceLevel}</p>
-                </CardContent>
-              </Card>
-            </div>
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${Math.min(comparisonResults.length, 3)}, minmax(280px, 1fr))` }}>
+                {comparisonResults.map((modelResult, idx) => (
+                  <Card key={idx} className="bg-background/30 min-w-[280px] inline-block align-top">
+                    <CardHeader><CardTitle className="text-lg text-accent">{modelResult.name}</CardTitle></CardHeader>
+                    <CardContent className="space-y-2 text-sm">
+                      <p><strong>Framework:</strong> {modelResult.selectedFramework?.toUpperCase() || "N/A"}</p>
+                      <p><strong>Base Model:</strong> {modelResult.selectedModel}</p>
+                      <p><strong>Architecture:</strong> {modelResult.architecture}</p>
+                      <p><strong>Data Size:</strong> {modelResult.dataSize}</p>
+                      <Separator className="my-2"/>
+                      <p><strong>Predicted Energy:</strong> <span className="font-semibold text-accent">{modelResult.predictedEnergyConsumption}</span></p>
+                      <p><strong>Confidence:</strong> {modelResult.confidenceLevel}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+            
 
             <Separator />
 
@@ -507,7 +427,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                         labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
                       />
                       <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }} />
-                      <Bar dataKey="energy" name="Energy" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} barSize={40} />
+                      <Bar dataKey="energy" name="Energy" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} barSize={Math.max(20, 80 / chartData.length)} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -522,13 +442,13 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
             <Separator />
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 flex-wrap">
-              <Button onClick={handleSaveReportToApp} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !onSaveReport}>
+              <Button onClick={handleSaveReportToApp} variant="outline" className="w-full sm:w-auto" disabled={!comparisonResults || !onSaveReport}>
                 <Save className="mr-2 h-4 w-4" /> Save Report to App
               </Button>
-              <Button onClick={handleExportReportToCSV} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
+              <Button onClick={handleExportReportToCSV} variant="outline" className="w-full sm:w-auto" disabled={!comparisonResults}>
                 <Sheet className="mr-2 h-4 w-4" /> Export Report (CSV)
               </Button>
-              <Button onClick={handleExportChartImage} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !chartData.length}>
+              <Button onClick={handleExportChartImage} variant="outline" className="w-full sm:w-auto" disabled={!comparisonResults || !chartData.length}>
                 <ImageDown className="mr-2 h-4 w-4" /> Download Chart (PNG)
               </Button>
             </div>

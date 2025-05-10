@@ -28,7 +28,7 @@ interface NavItem {
 function DashboardView({ setActiveView }: { setActiveView: (view: View) => void }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out lg:col-span-1">
         <CardHeader>
           <CardTitle className="text-xl text-primary">Dashboard Overview</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
@@ -151,7 +151,6 @@ export default function HomePage() {
       if (storedReports) {
         try {
           const parsedReports = JSON.parse(storedReports);
-          // Basic validation to ensure it's an array
           if (Array.isArray(parsedReports)) {
             setSavedReports(parsedReports);
           } else {
@@ -161,7 +160,7 @@ export default function HomePage() {
           }
         } catch (error) {
           console.error("Failed to parse reports from localStorage:", error);
-          setSavedReports([]); // Reset to empty array on error
+          setSavedReports([]); 
           localStorage.setItem("auraSavedReports", JSON.stringify([]));
         }
       }
@@ -179,7 +178,7 @@ export default function HomePage() {
   const handleSaveReport = (reportData: Omit<SavedReport, 'id'>) => {
     const newReport: SavedReport = {
       ...reportData,
-      id: crypto.randomUUID(), 
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `report-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
     };
     setSavedReports(prevReports => [...prevReports, newReport]);
   };

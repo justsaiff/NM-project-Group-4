@@ -74,9 +74,10 @@ export const convertReportToCsvDataArray = (report: SavedReport): (string | numb
   data.push(["Generated At", format(new Date(report.generatedAt), "yyyy-MM-dd HH:mm:ss")]);
   data.push([]); // Spacer row
 
-  data.push(["Property", "Model A", "Model B"]);
+  // Header row for model properties
+  const modelHeaders = report.models.map(model => model.name || `Model ${report.models.indexOf(model) + 1}`);
+  data.push(["Property", ...modelHeaders]);
   
-  // Define the order and labels for properties
   const properties: Array<{ key: keyof ModelReportDetails; label: string }> = [
     { key: "selectedModel", label: "Selected Base Model" },
     { key: "selectedFramework", label: "Framework" },
@@ -89,22 +90,20 @@ export const convertReportToCsvDataArray = (report: SavedReport): (string | numb
   ];
 
   properties.forEach(propInfo => {
-    let modelAValue = report.modelA[propInfo.key];
-    let modelBValue = report.modelB[propInfo.key];
-
-    if (propInfo.key === 'selectedFramework') {
-      modelAValue = report.modelA.selectedFramework ? frameworkNameMapping[report.modelA.selectedFramework] || report.modelA.selectedFramework : 'N/A';
-      modelBValue = report.modelB.selectedFramework ? frameworkNameMapping[report.modelB.selectedFramework] || report.modelB.selectedFramework : 'N/A';
-    }
-     // For parsedEnergyValue, combine with unit for clarity if needed, or handle as separate columns
-    // Currently, parsedEnergyValue and energyUnit are separate rows as per the property list.
-
-    data.push([propInfo.label, modelAValue, modelBValue]);
+    const rowData: (string | number | undefined | null)[] = [propInfo.label];
+    report.models.forEach(model => {
+      let value = model[propInfo.key];
+      if (propInfo.key === 'selectedFramework' && typeof value === 'string') {
+        value = frameworkNameMapping[value] || value;
+      }
+      rowData.push(value);
+    });
+    data.push(rowData);
   });
 
   data.push([]); // Spacer row
   data.push(["Chart Data Comparison"]);
-  data.push(["Name", "Energy Value", "Unit"]);
+  data.push(["Model Name", "Energy Value", "Unit"]);
   report.comparisonSummary.chartData.forEach(cd => {
     data.push([cd.name, cd.energy, cd.unit]);
   });
