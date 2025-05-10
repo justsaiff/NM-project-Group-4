@@ -16,7 +16,7 @@ import {
 import { AuraLogo } from "@/components/aura-logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { BarChartBig, Settings2, LogOut, Moon, Sun } from "lucide-react"; // Assuming LogOut, Moon, Sun for theme/logout
+import { Moon, Sun } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 
 interface NavItem {
@@ -33,10 +33,9 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
-  const [isDarkTheme, setIsDarkTheme] = React.useState(true); // Default to dark as per styling
+  const [isDarkTheme, setIsDarkTheme] = React.useState(true); 
 
   React.useEffect(() => {
-    // This is a simplified theme toggle. In a real app, you'd sync with localStorage and CSS.
     if (typeof window !== 'undefined') {
       document.documentElement.classList.toggle('dark', isDarkTheme);
     }
@@ -80,13 +79,7 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
                 <span>{isDarkTheme ? "Light Mode" : "Dark Mode"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Placeholder for logout */}
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => alert("Logout clicked")} tooltip={{ children: "Log Out", className: "bg-card text-card-foreground border-border shadow-lg" }}>
-                <LogOut />
-                <span>Log Out</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {/* Logout option removed */}
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
