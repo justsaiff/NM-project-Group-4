@@ -90,14 +90,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     name: "models",
   });
 
-  // Update input field if the actual number of models (fields.length) changes
-  React.useEffect(() => {
-    const currentModelCount = parseInt(numberOfModelsInput, 10);
-    if (isNaN(currentModelCount) || currentModelCount !== fields.length) {
-        setNumberOfModelsInput(String(fields.length));
-    }
-  }, [fields.length, numberOfModelsInput]);
-
   // Effect to auto-fill architecture based on selected model and framework
   React.useEffect(() => {
     fields.forEach((_field, index) => {
@@ -153,6 +145,8 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
          remove(fields.length - 1); 
       }
     }
+     // Ensure numberOfModelsInput reflects the actual number of models after adjustment
+    setNumberOfModelsInput(String(targetNum));
   };
 
 
@@ -317,7 +311,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               min={MIN_MODELS_TO_COMPARE}
               value={numberOfModelsInput}
               onChange={(e) => setNumberOfModelsInput(e.target.value)}
-              onBlur={handleSetNumberOfModels} // Or use a button
+              onBlur={handleSetNumberOfModels} 
               className="w-20 bg-input h-9"
             />
             <Button type="button" onClick={handleSetNumberOfModels} variant="outline" size="sm">
@@ -401,14 +395,16 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                   </div>
                 </Card>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => append(createDefaultModelInput())}
-                className="w-full mt-4"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Another Model
-              </Button>
+              { fields.length > 0 && ( // Only show 'Add Another Model' if there's at least one model shown due to form schema min validation
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => append(createDefaultModelInput())}
+                    className="w-full mt-4"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Another Model
+                </Button>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 items-center">
               <Button type="submit" disabled={isLoading || fields.length < MIN_MODELS_TO_COMPARE} className="w-full sm:w-auto max-w-xs bg-primary hover:bg-primary/90">
