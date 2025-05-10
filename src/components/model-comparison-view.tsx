@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
-import { GitCompareArrows, Loader2, FileDown, Save, Sheet as SheetIcon, ImageDown } from "lucide-react";
+import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown } from "lucide-react"; // Changed SheetIcon to Sheet
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
@@ -190,19 +190,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     };
   };
 
-  const downloadJSON = (data: object, filename: string) => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const handleSaveReportToApp = () => {
     const reportData = generateReportObject();
     if (reportData && onSaveReport) {
@@ -212,20 +199,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
     } else if (!onSaveReport) {
       toast({ title: "Save Error", description: "Cannot save report to app at this time.", variant: "destructive" });
-    }
-  };
-
-  const handleExportReportToJSON = () => {
-    const reportData = generateReportObject(); 
-    if (reportData) {
-      const fullReportDataWithIdForExport: SavedReport = {
-        ...reportData,
-        id: crypto.randomUUID(), 
-      };
-      downloadJSON(fullReportDataWithIdForExport, `aura_model_comparison_report_${new Date().toISOString().split('T')[0]}.json`);
-      toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
-    } else {
-      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
     }
   };
 
@@ -244,6 +217,35 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
     }
   };
+  
+  // Kept JSON download function in case it's needed elsewhere or for future use, but not wired to UI
+  const downloadJSON = (data: object, filename: string) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportReportToJSON_NotUsed = () => { // Renamed to indicate it's not used by UI
+    const reportData = generateReportObject(); 
+    if (reportData) {
+      const fullReportDataWithIdForExport: SavedReport = {
+        ...reportData,
+        id: crypto.randomUUID(), 
+      };
+      downloadJSON(fullReportDataWithIdForExport, `aura_model_comparison_report_${new Date().toISOString().split('T')[0]}.json`);
+      toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
+    } else {
+      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    }
+  };
+
 
   const handleExportChartImage = () => {
     if (chartContainerRef.current) {
@@ -262,10 +264,8 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
           const ctx = canvas.getContext('2d');
 
           if (ctx) {
-            // Set a background color for the PNG if desired, as SVG might be transparent
-            // Determine if dark mode is active to choose an appropriate background
             const isDarkMode = document.documentElement.classList.contains('dark');
-            ctx.fillStyle = isDarkMode ? '#2d3748' : '#ffffff'; // Example dark/light backgrounds
+            ctx.fillStyle = isDarkMode ? 'hsl(var(--card))' : 'hsl(var(--card))'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
 
@@ -479,7 +479,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                  <div className="h-[300px] w-full" ref={chartContainerRef}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                       <YAxis 
                         stroke="hsl(var(--muted-foreground))" 
@@ -498,7 +498,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                           borderColor: 'hsl(var(--border))',
                           borderRadius: 'var(--radius)',
                           color: 'hsl(var(--popover-foreground))',
-                          boxShadow: 'hsl(var(--shadow))'
+                          boxShadow: '0 2px 10px hsl(var(--shadow, 0 0% 0% / 0.1))'
                         }}
                         formatter={(value: number, name: string, entry: any) => {
                             const { payload } = entry;
@@ -525,11 +525,8 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               <Button onClick={handleSaveReportToApp} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !onSaveReport}>
                 <Save className="mr-2 h-4 w-4" /> Save Report to App
               </Button>
-              <Button onClick={handleExportReportToJSON} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
-                <FileDown className="mr-2 h-4 w-4" /> Download Report (JSON)
-              </Button>
               <Button onClick={handleExportReportToCSV} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
-                <SheetIcon className="mr-2 h-4 w-4" /> Export Report (CSV)
+                <Sheet className="mr-2 h-4 w-4" /> Export Report (CSV)
               </Button>
               <Button onClick={handleExportChartImage} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult || !chartData.length}>
                 <ImageDown className="mr-2 h-4 w-4" /> Download Chart (PNG)

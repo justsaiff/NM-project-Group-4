@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FileText, Eye, Download, Sheet as SheetIcon, ImageDown } from "lucide-react";
+import { FileText, Eye, Download, Sheet, ImageDown } from "lucide-react"; // Changed SheetIcon to Sheet
 import { format } from 'date-fns';
-import { convertReportToCsvDataArray, arrayToCsv, downloadCsv, frameworkNameMapping as csvFrameworkNameMapping } from "@/lib/csv-utils";
+import { convertReportToCsvDataArray, arrayToCsv, downloadCsv, frameworkNameMapping } from "@/lib/csv-utils";
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -31,7 +31,7 @@ const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> =
       <CardTitle className="text-lg text-accent">{title}</CardTitle>
     </CardHeader>
     <CardContent className="space-y-1">
-      <ReportDetailItem label="Framework" value={model.selectedFramework ? csvFrameworkNameMapping[model.selectedFramework] || model.selectedFramework : 'N/A'} />
+      <ReportDetailItem label="Framework" value={model.selectedFramework ? frameworkNameMapping[model.selectedFramework] || model.selectedFramework : 'N/A'} />
       <ReportDetailItem label="Base Model" value={model.selectedModel} />
       <ReportDetailItem label="Architecture" value={model.architecture} />
       <ReportDetailItem label="Data Size" value={model.dataSize} />
@@ -55,7 +55,15 @@ export function ReportsView({ reports }: ReportsViewProps) {
     setIsDetailDialogOpen(true);
   };
 
-  const downloadJSON = (data: object, filename: string) => {
+  const handleDownloadReportCSV = (report: SavedReport) => {
+    const csvDataArray = convertReportToCsvDataArray(report);
+    const csvString = arrayToCsv(csvDataArray);
+    downloadCsv(csvString, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.csv`);
+    toast({ title: "Report Exported", description: "The report has been downloaded as a CSV file." });
+  };
+  
+  // Kept JSON download function in case it's needed elsewhere or for future use, but not wired to UI
+  const downloadJSON_NotUsed = (data: object, filename: string) => {
     const jsonString = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -68,15 +76,6 @@ export function ReportsView({ reports }: ReportsViewProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadReportJSON = (report: SavedReport) => {
-    downloadJSON(report, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.json`);
-  };
-
-  const handleDownloadReportCSV = (report: SavedReport) => {
-    const csvDataArray = convertReportToCsvDataArray(report);
-    const csvString = arrayToCsv(csvDataArray);
-    downloadCsv(csvString, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.csv`);
-  };
 
   const handleDownloadDialogChartImage = () => {
     if (!selectedReport) {
@@ -100,7 +99,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
 
           if (ctx) {
             const isDarkMode = document.documentElement.classList.contains('dark');
-            ctx.fillStyle = isDarkMode ? '#1f2937' : '#ffffff'; // Example dark/light backgrounds
+            ctx.fillStyle = isDarkMode ? 'hsl(var(--card))' : 'hsl(var(--card))';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
 
@@ -174,11 +173,8 @@ export function ReportsView({ reports }: ReportsViewProps) {
                     </CardDescription>
                     </CardHeader>
                     <CardFooter className="flex justify-end gap-2 flex-wrap">
-                     <Button variant="outline" size="sm" onClick={() => handleDownloadReportJSON(report)}>
-                        <Download className="mr-2 h-4 w-4" /> JSON
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDownloadReportCSV(report)}>
-                        <SheetIcon className="mr-2 h-4 w-4" /> CSV
+                     <Button variant="outline" size="sm" onClick={() => handleDownloadReportCSV(report)}>
+                        <Sheet className="mr-2 h-4 w-4" /> CSV
                       </Button>
                     <Button variant="default" size="sm" onClick={() => handleViewDetails(report)}>
                         <Eye className="mr-2 h-4 w-4" /> View Details
@@ -216,7 +212,7 @@ export function ReportsView({ reports }: ReportsViewProps) {
                     <div className="h-[300px] w-full" ref={dialogChartContainerRef}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={selectedReport.comparisonSummary.chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                           <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
                           <YAxis 
                             stroke="hsl(var(--muted-foreground))" 
@@ -257,11 +253,8 @@ export function ReportsView({ reports }: ReportsViewProps) {
               </div>
             </ScrollArea>
             <DialogFooter className="p-6 border-t sm:justify-start gap-2 flex-wrap">
-               <Button variant="outline" onClick={() => handleDownloadReportJSON(selectedReport)}>
-                <Download className="mr-2 h-4 w-4" /> Download JSON
-              </Button>
               <Button variant="outline" onClick={() => handleDownloadReportCSV(selectedReport)}>
-                <SheetIcon className="mr-2 h-4 w-4" /> Export CSV
+                <Sheet className="mr-2 h-4 w-4" /> Export CSV
               </Button>
               <Button 
                 variant="outline" 
