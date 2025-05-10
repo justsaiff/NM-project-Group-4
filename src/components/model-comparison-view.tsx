@@ -8,7 +8,7 @@ import { GitCompareArrows } from "lucide-react";
 export function ModelComparisonView() {
   return (
     <div className="grid gap-6">
-      <Card className="bg-card text-card-foreground shadow-lg">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary">
             <GitCompareArrows className="w-5 h-5" />
@@ -22,12 +22,13 @@ export function ModelComparisonView() {
             receive a comparative analysis of their potential energy consumption.
             Helps in making informed decisions when selecting models for deployment.
           </p>
-          <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden" data-ai-hint="comparison chart">
+          <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden">
             <Image
               src="https://picsum.photos/seed/aura-model-compare/600/400"
               alt="Model comparison concept"
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               data-ai-hint="comparison chart"
             />
           </div>

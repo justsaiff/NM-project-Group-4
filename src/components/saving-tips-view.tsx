@@ -8,7 +8,7 @@ import { Lightbulb } from "lucide-react";
 export function SavingTipsView() {
   return (
     <div className="grid gap-6">
-      <Card className="bg-card text-card-foreground shadow-lg">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary">
             <Lightbulb className="w-5 h-5" />
@@ -21,12 +21,13 @@ export function SavingTipsView() {
             Discover actionable tips and best practices for designing, training, and deploying energy-efficient AI models.
             This section will cover topics like model pruning, quantization, efficient hardware usage, and more.
           </p>
-          <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden" data-ai-hint="green idea">
+          <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden">
             <Image
               src="https://picsum.photos/seed/aura-saving-tips/600/400"
               alt="Energy saving concept"
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               data-ai-hint="green idea"
             />
           </div>

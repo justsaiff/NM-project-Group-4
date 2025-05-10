@@ -8,12 +8,13 @@ import { ModelOptimizer } from "@/components/model-optimizer";
 import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-card";
 import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
-import { BarChartBig, Settings2, Zap, Lightbulb, GitCompareArrows } from "lucide-react"; 
+import { ChatbotView } from "@/components/chatbot-view"; // Import ChatbotView
+import { BarChartBig, Settings2, Zap, Lightbulb, GitCompareArrows, MessageCircle } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison";
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot"; // Add "chatbot"
 
 interface NavItem {
   id: View;
@@ -25,7 +26,7 @@ interface NavItem {
 function DashboardView() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle className="text-xl text-primary">Welcome to Aura</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
@@ -39,14 +40,15 @@ function DashboardView() {
             <Image 
               src="https://picsum.photos/seed/aura-welcome/600/400" 
               alt="Abstract technology background" 
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               data-ai-hint="technology abstract"
             />
           </div>
         </CardContent>
       </Card>
-       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><BarChartBig className="w-5 h-5"/>Energy Predictor</CardTitle>
           <CardDescription>Estimate model energy usage</CardDescription>
@@ -59,14 +61,15 @@ function DashboardView() {
             <Image 
               src="https://picsum.photos/seed/aura-predictor/600/400" 
               alt="Energy prediction concept" 
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               data-ai-hint="data graph"
             />
           </div>
         </CardContent>
       </Card>
-       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><Settings2 className="w-5 h-5"/>Model Optimizer</CardTitle>
           <CardDescription>Get tips to shrink your models</CardDescription>
@@ -79,8 +82,9 @@ function DashboardView() {
             <Image 
               src="https://picsum.photos/seed/aura-optimizer/600/400" 
               alt="Model optimization concept" 
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
               data-ai-hint="circuit board"
             />
           </div>
@@ -96,9 +100,10 @@ export default function HomePage() {
   const [activeView, setActiveView] = React.useState<View>("dashboard");
 
   const navItems: NavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: Zap, action: () => setActiveView("dashboard") },
+    { id: "dashboard", label: "Aura Home", icon: Zap, action: () => setActiveView("dashboard") },
     { id: "predictor", label: "Energy Predictor", icon: BarChartBig, action: () => setActiveView("predictor") },
     { id: "optimizer", label: "Model Optimizer", icon: Settings2, action: () => setActiveView("optimizer") },
+    { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") }, // Add chatbot nav item
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
   ];
@@ -111,6 +116,8 @@ export default function HomePage() {
         return <EnergyPredictor />;
       case "optimizer":
         return <ModelOptimizer />;
+      case "chatbot":
+        return <ChatbotView />; // Render ChatbotView
       case "savingTips":
         return <SavingTipsView />;
       case "modelComparison":
