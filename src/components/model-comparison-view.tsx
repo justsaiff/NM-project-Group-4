@@ -21,6 +21,7 @@ import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy
 import { useToast } from "@/hooks/use-toast";
 import { GitCompareArrows, Loader2, FileDown, Save } from "lucide-react";
 import { ModelSelector } from "./model-selector";
+import { FrameworkSelector } from "./framework-selector"; // Import FrameworkSelector
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
@@ -28,9 +29,12 @@ import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/r
 
 const comparisonFormSchema = z.object({
   modelA_selectedModel: z.string().optional(),
+  modelA_selectedFramework: z.string().optional(), // Added framework for Model A
   modelA_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
   modelA_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
+  
   modelB_selectedModel: z.string().optional(),
+  modelB_selectedFramework: z.string().optional(), // Added framework for Model B
   modelB_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
   modelB_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
 });
@@ -50,7 +54,7 @@ const parseEnergyValueAndUnit = (energyString: string): { value: number; unit: s
 };
 
 interface ModelComparisonViewProps {
-  onSaveReport?: (report: Omit<SavedReport, 'id'>) => void; // Callback to save report to app state
+  onSaveReport?: (report: Omit<SavedReport, 'id'>) => void; 
 }
 
 export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) {
@@ -65,32 +69,44 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       modelA_architecture: "",
       modelA_dataSize: "",
       modelA_selectedModel: undefined,
+      modelA_selectedFramework: undefined,
       modelB_architecture: "",
       modelB_dataSize: "",
       modelB_selectedModel: undefined,
+      modelB_selectedFramework: undefined,
     },
   });
 
   const modelASelected = form.watch("modelA_selectedModel");
+  const modelAFramework = form.watch("modelA_selectedFramework");
   const modelBSelected = form.watch("modelB_selectedModel");
+  const modelBFramework = form.watch("modelB_selectedFramework");
 
   React.useEffect(() => {
     if (modelASelected) {
-      let arch = "Transformer (GPT-like)";
-      if (modelASelected.includes("resnet")) arch = "CNN (ResNet-like)";
-      else if (modelASelected.includes("bert")) arch = "Transformer (BERT-like)";
+      let arch = form.getValues("modelA_architecture") || "";
+      let framework = modelAFramework;
+      if (modelASelected.includes("resnet")) { arch = "CNN (ResNet-like)"; if(!framework) framework = "tensorflow"; }
+      else if (modelASelected.includes("bert")) { arch = "Transformer (BERT-like)"; if(!framework) framework = "pytorch"; }
+      else if (modelASelected.includes("gpt")) { arch = "Transformer (GPT-like)"; if(!framework) framework = "pytorch"; }
+      else if (modelASelected.includes("skl_")) { if(!framework) framework = "scikit-learn"; }
       form.setValue("modelA_architecture", arch);
+      if(framework && framework !== modelAFramework) form.setValue("modelA_selectedFramework", framework);
     }
-  }, [modelASelected, form]);
+  }, [modelASelected, modelAFramework, form]);
 
   React.useEffect(() => {
     if (modelBSelected) {
-      let arch = "Transformer (GPT-like)";
-      if (modelBSelected.includes("resnet")) arch = "CNN (ResNet-like)";
-      else if (modelBSelected.includes("bert")) arch = "Transformer (BERT-like)";
+      let arch = form.getValues("modelB_architecture") || "";
+      let framework = modelBFramework;
+      if (modelBSelected.includes("resnet")) { arch = "CNN (ResNet-like)"; if(!framework) framework = "tensorflow"; }
+      else if (modelBSelected.includes("bert")) { arch = "Transformer (BERT-like)"; if(!framework) framework = "pytorch"; }
+      else if (modelBSelected.includes("gpt")) { arch = "Transformer (GPT-like)"; if(!framework) framework = "pytorch"; }
+      else if (modelBSelected.includes("skl_")) { if(!framework) framework = "scikit-learn"; }
       form.setValue("modelB_architecture", arch);
+      if(framework && framework !== modelBFramework) form.setValue("modelB_selectedFramework", framework);
     }
-  }, [modelBSelected, form]);
+  }, [modelBSelected, modelBFramework, form]);
 
 
   async function onSubmit(values: ComparisonFormValues) {
@@ -139,6 +155,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     const modelADetails: ModelReportDetails = {
       name: "Model A",
       selectedModel: form.getValues("modelA_selectedModel") || "Custom",
+      selectedFramework: form.getValues("modelA_selectedFramework"),
       architecture: form.getValues("modelA_architecture"),
       dataSize: form.getValues("modelA_dataSize"),
       predictedEnergyConsumption: modelAResult.predictedEnergyConsumption,
@@ -150,6 +167,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     const modelBDetails: ModelReportDetails = {
       name: "Model B",
       selectedModel: form.getValues("modelB_selectedModel") || "Custom",
+      selectedFramework: form.getValues("modelB_selectedFramework"),
       architecture: form.getValues("modelB_architecture"),
       dataSize: form.getValues("modelB_dataSize"),
       predictedEnergyConsumption: modelBResult.predictedEnergyConsumption,
@@ -195,11 +213,11 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
   };
 
   const handleExportReportToJSON = () => {
-    const reportData = generateReportObject(); // Use the same object generation
+    const reportData = generateReportObject(); 
     if (reportData) {
       const fullReportDataWithIdForExport: SavedReport = {
         ...reportData,
-        id: crypto.randomUUID(), // Generate an ID for the exported file if needed, or omit
+        id: crypto.randomUUID(), 
       };
       downloadJSON(fullReportDataWithIdForExport, `aura_model_comparison_report_${new Date().toISOString().split('T')[0]}.json`);
       toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
@@ -228,6 +246,21 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                   <h3 className="text-lg font-semibold text-primary">Model A</h3>
                   <FormField
                     control={form.control}
+                    name="modelA_selectedFramework"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FrameworkSelector
+                          selectedFramework={field.value}
+                          onFrameworkChange={field.onChange}
+                          label="Model A Framework"
+                          idSuffix="modelA"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="modelA_selectedModel"
                     render={({ field }) => (
                       <FormItem>
@@ -235,8 +268,9 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                           selectedModel={field.value} 
                           onModelChange={field.onChange} 
                           label="Optional: Select Base Model A"
+                          // currentFramework={modelAFramework}
                         />
-                         <FormDescription>Selecting a model may pre-fill architecture.</FormDescription>
+                         <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -248,6 +282,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                       <FormItem>
                         <FormLabel>Model A Architecture</FormLabel>
                         <FormControl><Input placeholder="e.g., Transformer, CNN" {...field} className="bg-input"/></FormControl>
+                         <FormDescription>Ensure this reflects the selected framework if any.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -268,6 +303,21 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                 {/* Model B Inputs */}
                 <div className="space-y-4 p-4 border rounded-lg bg-background/30 shadow-sm">
                   <h3 className="text-lg font-semibold text-primary">Model B</h3>
+                  <FormField
+                    control={form.control}
+                    name="modelB_selectedFramework"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FrameworkSelector
+                          selectedFramework={field.value}
+                          onFrameworkChange={field.onChange}
+                          label="Model B Framework"
+                          idSuffix="modelB"
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                    <FormField
                     control={form.control}
                     name="modelB_selectedModel"
@@ -277,8 +327,9 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                           selectedModel={field.value} 
                           onModelChange={field.onChange} 
                           label="Optional: Select Base Model B"
+                          // currentFramework={modelBFramework}
                         />
-                        <FormDescription>Selecting a model may pre-fill architecture.</FormDescription>
+                        <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -290,6 +341,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                       <FormItem>
                         <FormLabel>Model B Architecture</FormLabel>
                         <FormControl><Input placeholder="e.g., Transformer, CNN" {...field} className="bg-input"/></FormControl>
+                        <FormDescription>Ensure this reflects the selected framework if any.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -328,6 +380,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               <Card className="bg-background/30">
                 <CardHeader><CardTitle className="text-lg text-accent">Model A Details</CardTitle></CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  <p><strong>Framework:</strong> {form.getValues("modelA_selectedFramework")?.toUpperCase() || "N/A"}</p>
                   <p><strong>Base Model:</strong> {form.getValues("modelA_selectedModel") || "Custom"}</p>
                   <p><strong>Architecture:</strong> {form.getValues("modelA_architecture")}</p>
                   <p><strong>Data Size:</strong> {form.getValues("modelA_dataSize")}</p>
@@ -339,6 +392,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               <Card className="bg-background/30">
                 <CardHeader><CardTitle className="text-lg text-accent">Model B Details</CardTitle></CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  <p><strong>Framework:</strong> {form.getValues("modelB_selectedFramework")?.toUpperCase() || "N/A"}</p>
                   <p><strong>Base Model:</strong> {form.getValues("modelB_selectedModel") || "Custom"}</p>
                   <p><strong>Architecture:</strong> {form.getValues("modelB_architecture")}</p>
                   <p><strong>Data Size:</strong> {form.getValues("modelB_dataSize")}</p>
@@ -413,4 +467,3 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     </div>
   );
 }
-

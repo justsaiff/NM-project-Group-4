@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -15,16 +16,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-// import { Textarea } from "@/components/ui/textarea"; // Removed unused import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionInput, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { ModelSelector } from "./model-selector";
-
+import { FrameworkSelector } from "./framework-selector"; // Import FrameworkSelector
 
 const formSchema = z.object({
   selectedModel: z.string().optional(),
+  selectedFramework: z.string().optional(), // Added selectedFramework
   modelArchitecture: z.string().min(3, {
     message: "Model architecture must be at least 3 characters.",
   }),
@@ -49,31 +50,40 @@ export function EnergyPredictorForm({ onPredictionResult }: EnergyPredictorFormP
       modelArchitecture: "",
       dataSize: "",
       selectedModel: undefined,
+      selectedFramework: undefined, // Default value for framework
     },
   });
   
   const selectedModelValue = form.watch("selectedModel");
+  const selectedFrameworkValue = form.watch("selectedFramework");
 
   React.useEffect(() => {
     if (selectedModelValue) {
-      // Placeholder: In a real app, you might fetch model details based on selectedModelValue
-      // and pre-fill architecture or typical data size.
+      let arch = form.getValues("modelArchitecture") || "";
       if (selectedModelValue.includes("resnet")) {
-        form.setValue("modelArchitecture", "CNN (ResNet-like)");
+        arch = "CNN (ResNet-like)";
+        if (!selectedFrameworkValue) form.setValue("selectedFramework", "tensorflow"); // Guess framework
       } else if (selectedModelValue.includes("bert")) {
-        form.setValue("modelArchitecture", "Transformer (BERT-like)");
+        arch = "Transformer (BERT-like)";
+        if (!selectedFrameworkValue) form.setValue("selectedFramework", "pytorch"); // Guess framework
       } else if (selectedModelValue.includes("gpt")) {
-        form.setValue("modelArchitecture", "Transformer (GPT-like)");
+        arch = "Transformer (GPT-like)";
+        if (!selectedFrameworkValue) form.setValue("selectedFramework", "pytorch"); // Guess framework
+      } else if (selectedModelValue.includes("skl_")) {
+         if (!selectedFrameworkValue) form.setValue("selectedFramework", "scikit-learn");
       }
+      form.setValue("modelArchitecture", arch);
     }
-  }, [selectedModelValue, form]);
+  }, [selectedModelValue, form, selectedFrameworkValue]);
 
 
   async function onSubmit(values: EnergyPredictorFormValues) {
     setIsLoading(true);
     try {
+      // Framework can be part of the architecture description if the user includes it.
+      // The AI flow itself doesn't have a separate framework field.
       const predictionInput: EnergyPredictionInput = {
-        modelArchitecture: values.modelArchitecture,
+        modelArchitecture: values.modelArchitecture, // User should include framework in this description if relevant
         dataSize: values.dataSize,
       };
       const result = await energyPrediction(predictionInput);
@@ -107,6 +117,22 @@ export function EnergyPredictorForm({ onPredictionResult }: EnergyPredictorFormP
           <CardContent className="space-y-6">
             <FormField
               control={form.control}
+              name="selectedFramework"
+              render={({ field }) => (
+                <FormItem>
+                  <FrameworkSelector
+                    selectedFramework={field.value}
+                    onFrameworkChange={field.onChange}
+                  />
+                  <FormDescription>
+                    Select the primary framework used for the model.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="selectedModel"
               render={({ field }) => (
                 <FormItem>
@@ -114,7 +140,12 @@ export function EnergyPredictorForm({ onPredictionResult }: EnergyPredictorFormP
                     selectedModel={field.value} 
                     onModelChange={field.onChange}
                     label="Optionally, select a base model"
+                    // Pass selected framework to filter or guide model selection if needed in future
+                    // currentFramework={selectedFrameworkValue} 
                   />
+                   <FormDescription>
+                    Selecting a model may pre-fill architecture and suggest a framework.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -129,7 +160,7 @@ export function EnergyPredictorForm({ onPredictionResult }: EnergyPredictorFormP
                     <Input placeholder="e.g., Transformer, CNN, LSTM" {...field} className="bg-input text-foreground border-border"/>
                   </FormControl>
                   <FormDescription>
-                    Describe the type of architecture (e.g., CNN, Transformer).
+                    Describe the type of architecture. If you selected a framework, ensure it's reflected here or in the name.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

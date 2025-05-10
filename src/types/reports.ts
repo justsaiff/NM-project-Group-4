@@ -6,6 +6,7 @@
 export interface ModelReportDetails {
   name: string;
   selectedModel: string; // Name of the selected base model or "Custom"
+  selectedFramework?: string; // e.g., "tensorflow", "pytorch", "scikit-learn"
   architecture: string;
   dataSize: string;
   predictedEnergyConsumption: string; // e.g., "150 kWh"

@@ -16,12 +16,18 @@ interface ReportsViewProps {
   reports: SavedReport[];
 }
 
-const ReportDetailItem: React.FC<{ label: string; value: string | number | undefined }> = ({ label, value }) => (
+const ReportDetailItem: React.FC<{ label: string; value: string | number | undefined | null }> = ({ label, value }) => (
   <p className="text-sm">
     <strong className="text-muted-foreground">{label}:</strong> {value ?? 'N/A'}
   </p>
 );
 
+const frameworkNameMapping: { [key: string]: string } = {
+  tensorflow: "TensorFlow",
+  pytorch: "PyTorch",
+  "scikit-learn": "scikit-learn",
+  other: "Other/Custom"
+};
 
 const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> = ({ model, title }) => (
   <Card className="bg-background/50 flex-1">
@@ -29,6 +35,7 @@ const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> =
       <CardTitle className="text-lg text-accent">{title}</CardTitle>
     </CardHeader>
     <CardContent className="space-y-1">
+      <ReportDetailItem label="Framework" value={model.selectedFramework ? frameworkNameMapping[model.selectedFramework] || model.selectedFramework : 'N/A'} />
       <ReportDetailItem label="Base Model" value={model.selectedModel} />
       <ReportDetailItem label="Architecture" value={model.architecture} />
       <ReportDetailItem label="Data Size" value={model.dataSize} />
