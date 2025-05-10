@@ -129,13 +129,69 @@ export function ModelComparisonView() {
   
   const primaryUnit = modelAResult?.energyUnit || modelBResult?.energyUnit || "units";
 
+  const generateReportData = () => {
+    if (!modelAResult || !modelBResult) return null;
+
+    return {
+      reportTitle: "Model Energy Comparison Report",
+      generatedAt: new Date().toISOString(),
+      modelA: {
+        name: "Model A",
+        selectedModel: form.getValues("modelA_selectedModel") || "Custom",
+        architecture: form.getValues("modelA_architecture"),
+        dataSize: form.getValues("modelA_dataSize"),
+        predictedEnergyConsumption: modelAResult.predictedEnergyConsumption,
+        confidenceLevel: modelAResult.confidenceLevel,
+        parsedEnergyValue: modelAResult.parsedEnergyValue,
+        energyUnit: modelAResult.energyUnit,
+      },
+      modelB: {
+        name: "Model B",
+        selectedModel: form.getValues("modelB_selectedModel") || "Custom",
+        architecture: form.getValues("modelB_architecture"),
+        dataSize: form.getValues("modelB_dataSize"),
+        predictedEnergyConsumption: modelBResult.predictedEnergyConsumption,
+        confidenceLevel: modelBResult.confidenceLevel,
+        parsedEnergyValue: modelBResult.parsedEnergyValue,
+        energyUnit: modelBResult.energyUnit,
+      },
+      comparisonSummary: {
+        chartData: chartData,
+      },
+    };
+  };
+
+  const downloadJSON = (data: object, filename: string) => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSaveReport = () => {
-    toast({ title: "Save Report", description: "This feature is not yet implemented." });
+    const reportData = generateReportData();
+    if (reportData) {
+      downloadJSON(reportData, "model_comparison_report_saved.json");
+      toast({ title: "Report Saved", description: "The comparison report has been downloaded as a JSON file." });
+    } else {
+      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    }
   };
 
   const handleExportReport = () => {
-    toast({ title: "Export Report", description: "This feature is not yet implemented." });
+    const reportData = generateReportData();
+    if (reportData) {
+      downloadJSON(reportData, "model_comparison_report_exported.json");
+      toast({ title: "Report Exported", description: "The comparison report has been downloaded as a JSON file." });
+    } else {
+      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    }
   };
 
   return (
@@ -328,11 +384,11 @@ export function ModelComparisonView() {
             <Separator />
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button onClick={handleSaveReport} variant="outline" className="w-full sm:w-auto">
-                <Save className="mr-2 h-4 w-4" /> Save Report (Coming Soon)
+              <Button onClick={handleSaveReport} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
+                <Save className="mr-2 h-4 w-4" /> Save Report
               </Button>
-              <Button onClick={handleExportReport} variant="outline" className="w-full sm:w-auto">
-                <FileDown className="mr-2 h-4 w-4" /> Export Report (Coming Soon)
+              <Button onClick={handleExportReport} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
+                <FileDown className="mr-2 h-4 w-4" /> Export Report
               </Button>
             </div>
           </CardContent>
