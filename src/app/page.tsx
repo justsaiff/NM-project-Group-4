@@ -6,12 +6,14 @@ import { AppLayout } from "@/components/app-layout";
 import { EnergyPredictor } from "@/components/energy-predictor";
 import { ModelOptimizer } from "@/components/model-optimizer";
 import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-card";
-import { BarChartBig, Settings2, Zap } from "lucide-react"; 
+import { SavingTipsView } from "@/components/saving-tips-view";
+import { ModelComparisonView } from "@/components/model-comparison-view";
+import { BarChartBig, Settings2, Zap, Lightbulb, GitCompareArrows } from "lucide-react"; 
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
-type View = "dashboard" | "predictor" | "optimizer";
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison";
 
 interface NavItem {
   id: View;
@@ -31,7 +33,7 @@ function DashboardView() {
         <CardContent>
           <p className="text-muted-foreground">
             Aura helps you understand and optimize the energy consumption of your AI models.
-            Use the navigation मैन्यू to explore features like the Energy Predictor and Model Optimizer.
+            Use the navigation menu to explore features like the Energy Predictor and Model Optimizer.
           </p>
           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
@@ -97,6 +99,8 @@ export default function HomePage() {
     { id: "dashboard", label: "Dashboard", icon: Zap, action: () => setActiveView("dashboard") },
     { id: "predictor", label: "Energy Predictor", icon: BarChartBig, action: () => setActiveView("predictor") },
     { id: "optimizer", label: "Model Optimizer", icon: Settings2, action: () => setActiveView("optimizer") },
+    { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
+    { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
   ];
 
   const renderView = () => {
@@ -107,6 +111,10 @@ export default function HomePage() {
         return <EnergyPredictor />;
       case "optimizer":
         return <ModelOptimizer />;
+      case "savingTips":
+        return <SavingTipsView />;
+      case "modelComparison":
+        return <ModelComparisonView />;
       default:
         return <DashboardView />;
     }
