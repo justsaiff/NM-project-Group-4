@@ -17,9 +17,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
+  SidebarTrigger, // Keep for potential direct use, though not in header now
 } from "@/components/ui/sidebar";
-import { SheetTitle } from "@/components/ui/sheet"; // Ensured SheetTitle is imported for accessibility
+import { SheetTitle } from "@/components/ui/sheet"; 
 
 interface NavItem {
   id: string;
@@ -51,9 +51,8 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
     <SidebarProvider defaultOpen>
       <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="p-4">
-          {/* The AuraLogo now contains the Menu icon and acts as the primary sidebar toggle.
-              The redundant SidebarTrigger previously here has been removed. */}
           <div className="flex items-center">
+            {/* This AuraLogo is for the top of the sidebar itself */}
             <AuraLogo iconClassName="h-6 w-6" />
           </div>
         </SidebarHeader>
@@ -87,11 +86,12 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
       </Sidebar>
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          {/* This trigger is visible to toggle sidebar on all screen sizes from the main content area */}
-          <SidebarTrigger /> 
-          <h1 className="text-xl font-semibold text-foreground">
-            {navItems.find(item => item.id === activeView)?.label || "Aura Dashboard"}
-          </h1>
+          {/* AuraLogo now serves as the primary toggle and brand identifier in the header */}
+          <AuraLogo 
+            iconClassName="h-5 w-5" 
+            className="!text-foreground p-0 hover:bg-transparent focus-visible:ring-offset-0 focus-visible:ring-transparent"
+            textAlwaysVisible={true} // Ensure "Aura" text is always visible in the header
+          />
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
           {children}
@@ -100,3 +100,4 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
+

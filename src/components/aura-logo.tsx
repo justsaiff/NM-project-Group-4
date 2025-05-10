@@ -7,9 +7,10 @@ import * as React from 'react';
 
 interface AuraLogoProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   iconClassName?: string;
+  textAlwaysVisible?: boolean;
 }
 
-export function AuraLogo({ className, iconClassName, ...props }: AuraLogoProps) {
+export function AuraLogo({ className, iconClassName, textAlwaysVisible = false, ...props }: AuraLogoProps) {
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -23,8 +24,11 @@ export function AuraLogo({ className, iconClassName, ...props }: AuraLogoProps) 
       {...props}
     >
       <Menu className={cn("h-6 w-6", iconClassName)} />
-      {/* Text "Aura" is hidden when the sidebar group has data-state="collapsed" */}
-      <span className="text-xl font-semibold text-foreground group-data-[state=collapsed]:hidden">Aura</span>
+      <span className={cn(
+        "text-xl font-semibold text-foreground",
+        !textAlwaysVisible && "group-data-[state=collapsed]:hidden"
+      )}>Aura</span>
     </button>
   );
 }
+
