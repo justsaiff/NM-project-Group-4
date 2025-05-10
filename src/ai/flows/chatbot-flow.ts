@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A general-purpose chatbot flow for Aura.
@@ -15,7 +16,9 @@ const ChatbotQueryInputSchema = z.object({
   history: z.array(z.object({
     role: z.enum(['user', 'model']),
     parts: z.array(z.object({text: z.string()})),
-  })).optional().describe('Optional conversation history to provide context.'),
+    isUser: z.boolean().describe('True if the role is user. For template use.'),
+    isModel: z.boolean().describe('True if the role is model. For template use.'),
+  })).optional().describe('Optional conversation history to provide context. Each item should include isUser and isModel flags.'),
 });
 export type ChatbotQueryInput = z.infer<typeof ChatbotQueryInputSchema>;
 
@@ -39,8 +42,8 @@ Be concise and informative. If you don't know an answer, say so politely.
 {{#if history}}
 Conversation History:
 {{#each history}}
-{{#if (eq this.role "user")}}User: {{this.parts.[0].text}}{{/if}}
-{{#if (eq this.role "model")}}AuraChat: {{this.parts.[0].text}}{{/if}}
+{{#if this.isUser}}User: {{this.parts.[0].text}}{{/if}}
+{{#if this.isModel}}AuraChat: {{this.parts.[0].text}}{{/if}}
 {{/each}}
 {{/if}}
 
@@ -66,3 +69,4 @@ const chatbotFlow = ai.defineFlow(
     return output!;
   }
 );
+
