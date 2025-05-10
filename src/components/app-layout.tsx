@@ -1,23 +1,24 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import * as React from "react";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarInset,
-  SidebarTrigger,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
+
 import { AuraLogo } from "@/components/aura-logo";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Moon, Sun } from "lucide-react"; 
-import type { LucideIcon } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 interface NavItem {
   id: string;
@@ -51,6 +52,7 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
         <SidebarHeader className="p-4">
           <div className="flex items-center justify-between">
             <AuraLogo className="w-8 h-8" />
+            {/* This trigger expands the sidebar when it's in icon-only mode on desktop */}
             <SidebarTrigger className="hidden md:group-data-[collapsible=icon]:flex" />
           </div>
         </SidebarHeader>
@@ -79,13 +81,13 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
                 <span>{isDarkTheme ? "Light Mode" : "Dark Mode"}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Logout option removed */}
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          <SidebarTrigger className="md:hidden" /> {/* Mobile trigger */}
+          {/* This trigger is now always visible to toggle sidebar on all screen sizes */}
+          <SidebarTrigger /> 
           <h1 className="text-xl font-semibold text-foreground">
             {navItems.find(item => item.id === activeView)?.label || "Aura Dashboard"}
           </h1>
