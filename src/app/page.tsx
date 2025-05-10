@@ -25,7 +25,7 @@ interface NavItem {
 function DashboardView() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-card text-card-foreground shadow-lg" data-ai-hint="technology abstract">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="text-xl text-primary">Welcome to Aura</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
@@ -46,7 +46,7 @@ function DashboardView() {
           </div>
         </CardContent>
       </Card>
-       <Card className="bg-card text-card-foreground shadow-lg" data-ai-hint="energy efficiency">
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><BarChartBig className="w-5 h-5"/>Energy Predictor</CardTitle>
           <CardDescription>Estimate model energy usage</CardDescription>
@@ -66,7 +66,7 @@ function DashboardView() {
           </div>
         </CardContent>
       </Card>
-       <Card className="bg-card text-card-foreground shadow-lg" data-ai-hint="model optimization">
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><Settings2 className="w-5 h-5"/>Model Optimizer</CardTitle>
           <CardDescription>Get tips to shrink your models</CardDescription>
@@ -126,3 +126,4 @@ export default function HomePage() {
     </AppLayout>
   );
 }
+

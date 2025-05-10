@@ -3,7 +3,7 @@
 import type { ModelOptimizationOutput } from "@/ai/flows/model-optimization-suggestions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, Lightbulb, TrendingUp } from "lucide-react"; // Added TrendingUp
+import { CheckCircle2, Lightbulb, TrendingUp } from "lucide-react"; 
 
 interface ModelOptimizerResultsProps {
   suggestions: ModelOptimizationOutput;
@@ -23,7 +23,7 @@ export function ModelOptimizerResults({ suggestions }: ModelOptimizerResultsProp
   const { suggestedTechniques, expectedBenefits } = suggestions;
 
   return (
-    <Card className="w-full max-w-2xl mt-8 bg-card text-card-foreground shadow-xl">
+    <Card className="w-full bg-card text-card-foreground shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl text-primary flex items-center">
           <Lightbulb className="w-7 h-7 mr-2 text-accent" /> Optimization Suggestions

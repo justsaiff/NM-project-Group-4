@@ -23,7 +23,7 @@ export function EnergyPredictionResults({ result }: EnergyPredictionResultsProps
   const energyUnit = predictedEnergyConsumption.replace(/[\d\.\s,]/g, '') || "units";
 
   return (
-    <Card className="w-full max-w-2xl mt-8 bg-card text-card-foreground shadow-xl">
+    <Card className="w-full bg-card text-card-foreground shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl text-primary">Prediction Results</CardTitle>
         <CardDescription>

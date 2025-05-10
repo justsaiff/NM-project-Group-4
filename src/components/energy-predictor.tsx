@@ -15,7 +15,12 @@ export function EnergyPredictor() {
   return (
     <div className="space-y-8 flex flex-col items-center">
       <EnergyPredictorForm onPredictionResult={handlePredictionResult} />
-      {predictionResult && <EnergyPredictionResults result={predictionResult} />}
+      {predictionResult && (
+        <div className="w-full max-w-2xl animate-in fade-in-0 zoom-in-95 duration-500">
+          <EnergyPredictionResults result={predictionResult} />
+        </div>
+      )}
     </div>
   );
 }
+
