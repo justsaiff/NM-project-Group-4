@@ -1,5 +1,5 @@
 
-import { Menu, Zap } from 'lucide-react'; // Added Zap
+import { Zap } from 'lucide-react'; // Removed Menu, kept Zap
 import type { LucideProps } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
@@ -17,18 +17,17 @@ export function AuraLogo({ className, iconClassName, textAlwaysVisible = false, 
     <button
       onClick={toggleSidebar}
       className={cn(
-        "flex items-center gap-2 text-primary p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md transition-colors",
+        "flex items-center gap-1 text-primary p-1 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md transition-colors", // Adjusted gap from gap-2 to gap-1
         className
       )}
       aria-label="Toggle sidebar"
       {...props}
     >
-      <Menu className={cn("h-6 w-6", iconClassName)} />
+      {/* Menu icon removed */}
+      <Zap className={cn("text-primary", iconClassName)} /> 
+      {/* "Aura" text conditionally displayed */}
       {textAlwaysVisible ? (
-        <div className="flex items-center gap-1">
-          <Zap className={cn("text-primary", iconClassName)} /> 
-          <span className="text-xl font-semibold text-foreground">Aura</span>
-        </div>
+        <span className="text-xl font-semibold text-foreground">Aura</span>
       ) : (
         <span className={cn(
           "text-xl font-semibold text-foreground",
