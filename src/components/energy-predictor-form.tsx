@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+// import { Textarea } from "@/components/ui/textarea"; // Removed unused import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionInput, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";

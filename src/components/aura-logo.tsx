@@ -1,6 +1,5 @@
-
 import { Zap } from 'lucide-react'; // Removed Menu, kept Zap
-import type { LucideProps } from 'lucide-react';
+// import type { LucideProps } from 'lucide-react'; // Removed unused import
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
@@ -37,4 +36,3 @@ export function AuraLogo({ className, iconClassName, textAlwaysVisible = false, 
     </button>
   );
 }
-

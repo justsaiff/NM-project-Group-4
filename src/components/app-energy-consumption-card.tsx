@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnergyDisplayCard } from "./energy-display-card";
-import { Cpu } from "lucide-react";
+import { Cpu, Zap } from "lucide-react"; // Consolidated Zap import here
 import Image from "next/image";
 
 export function AppEnergyConsumptionCard() {
@@ -46,5 +45,4 @@ export function AppEnergyConsumptionCard() {
   );
 }
 
-// Need Zap icon for EnergyDisplayCard, if it's not globally available, import it here.
-import { Zap } from "lucide-react";
+// Duplicate Zap import removed from here

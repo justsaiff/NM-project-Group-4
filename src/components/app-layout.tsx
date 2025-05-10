@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { LucideIcon } from "lucide-react";
@@ -19,7 +18,7 @@ import {
   SidebarProvider,
   SidebarTrigger, 
 } from "@/components/ui/sidebar";
-import { SheetTitle } from "@/components/ui/sheet"; 
+// import { SheetTitle } from "@/components/ui/sheet"; // Removed unused import
 
 interface NavItem {
   id: string;

@@ -61,4 +61,3 @@ export function ModelOptimizerResults({ suggestions }: ModelOptimizerResultsProp
     </Card>
   );
 }
-
