@@ -32,17 +32,24 @@ export function SavingTipsView() {
             />
           </div>
           <div className="space-y-2 pt-4">
-            <h3 className="text-lg font-semibold text-primary">Coming Soon:</h3>
+            <h3 className="text-lg font-semibold text-primary">Key Energy Saving Strategies:</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-1">
               <li>Optimizing Data Preprocessing</li>
               <li>Choosing Energy-Efficient Architectures</li>
               <li>Hardware Acceleration Techniques</li>
               <li>Continuous Monitoring and Optimization</li>
               <li>Efficient Training Strategies</li>
+              <li>Model Pruning and Quantization</li>
+              <li>Algorithm Selection and Hyperparameter Tuning</li>
+              <li>Utilizing Cloud Efficiency Features</li>
             </ul>
           </div>
+           <p className="text-sm text-muted-foreground pt-4">
+            Detailed guides and interactive tools for each of these strategies are coming soon!
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 }
+
