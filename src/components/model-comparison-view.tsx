@@ -20,22 +20,23 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { energyPrediction, type EnergyPredictionOutput } from "@/ai/flows/energy-prediction-flow";
 import { useToast } from "@/hooks/use-toast";
-import { GitCompareArrows, Loader2, FileDown, Save } from "lucide-react";
+import { GitCompareArrows, Loader2, FileDown, Save, Sheet as SheetIcon } from "lucide-react";
 import { ModelSelector } from "./model-selector";
-import { FrameworkSelector } from "./framework-selector"; // Import FrameworkSelector
+import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
+import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
 
 
 const comparisonFormSchema = z.object({
   modelA_selectedModel: z.string().optional(),
-  modelA_selectedFramework: z.string().optional(), // Added framework for Model A
+  modelA_selectedFramework: z.string().optional(), 
   modelA_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
   modelA_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
   
   modelB_selectedModel: z.string().optional(),
-  modelB_selectedFramework: z.string().optional(), // Added framework for Model B
+  modelB_selectedFramework: z.string().optional(), 
   modelB_architecture: z.string().min(3, { message: "Model architecture must be at least 3 characters." }),
   modelB_dataSize: z.string().min(1, { message: "Data size is required (e.g., 1GB, 100MB)." }),
 });
@@ -227,6 +228,23 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
     }
   };
 
+  const handleExportReportToCSV = () => {
+    const reportData = generateReportObject();
+    if (reportData) {
+      const fullReportDataWithIdForExport: SavedReport = {
+        ...reportData,
+        id: crypto.randomUUID(),
+      };
+      const csvDataArray = convertReportToCsvDataArray(fullReportDataWithIdForExport);
+      const csvString = arrayToCsv(csvDataArray);
+      downloadCsv(csvString, `aura_model_comparison_report_${new Date(fullReportDataWithIdForExport.generatedAt).toISOString().split('T')[0]}.csv`);
+      toast({ title: "Report Exported to CSV", description: "The comparison report has been downloaded as a CSV file." });
+    } else {
+      toast({ title: "No Data", description: "Please generate a comparison first.", variant: "destructive" });
+    }
+  };
+
+
   return (
     <div className="space-y-8">
       <Card className="bg-card text-card-foreground shadow-xl">
@@ -269,7 +287,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                           selectedModel={field.value} 
                           onModelChange={field.onChange} 
                           label="Optional: Select Base Model A"
-                          // currentFramework={modelAFramework}
                         />
                          <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
                         <FormMessage />
@@ -328,7 +345,6 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                           selectedModel={field.value} 
                           onModelChange={field.onChange} 
                           label="Optional: Select Base Model B"
-                          // currentFramework={modelBFramework}
                         />
                         <FormDescription>Selecting a model may pre-fill architecture and suggest a framework.</FormDescription>
                         <FormMessage />
@@ -460,6 +476,9 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
               </Button>
               <Button onClick={handleExportReportToJSON} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
                 <FileDown className="mr-2 h-4 w-4" /> Download Report (JSON)
+              </Button>
+              <Button onClick={handleExportReportToCSV} variant="outline" className="w-full sm:w-auto" disabled={!modelAResult || !modelBResult}>
+                <SheetIcon className="mr-2 h-4 w-4" /> Export Report (CSV)
               </Button>
             </div>
           </CardContent>

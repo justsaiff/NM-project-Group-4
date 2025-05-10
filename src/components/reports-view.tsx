@@ -2,15 +2,17 @@
 "use client";
 
 import * as React from "react";
-import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
+import type { SavedReport, ModelReportDetails } from "@/types/reports";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { FileText, Eye, Download } from "lucide-react";
+import { FileText, Eye, Download, Sheet as SheetIcon } from "lucide-react";
 import { format } from 'date-fns';
+import { convertReportToCsvDataArray, arrayToCsv, downloadCsv, frameworkNameMapping as csvFrameworkNameMapping } from "@/lib/csv-utils";
+
 
 interface ReportsViewProps {
   reports: SavedReport[];
@@ -22,12 +24,15 @@ const ReportDetailItem: React.FC<{ label: string; value: string | number | undef
   </p>
 );
 
-const frameworkNameMapping: { [key: string]: string } = {
-  tensorflow: "TensorFlow",
-  pytorch: "PyTorch",
-  "scikit-learn": "scikit-learn",
-  other: "Other/Custom"
-};
+// Use the mapping from csv-utils or define locally if it's preferred to keep it separate
+// For consistency, it's better if csv-utils exports it or it's defined in a shared types/constants file.
+// Assuming csvFrameworkNameMapping is imported from csv-utils for this example.
+// const frameworkNameMapping: { [key: string]: string } = {
+//   tensorflow: "TensorFlow",
+//   pytorch: "PyTorch",
+//   "scikit-learn": "scikit-learn",
+//   other: "Other/Custom"
+// };
 
 const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> = ({ model, title }) => (
   <Card className="bg-background/50 flex-1">
@@ -35,7 +40,7 @@ const ModelDetailsCard: React.FC<{ model: ModelReportDetails, title: string }> =
       <CardTitle className="text-lg text-accent">{title}</CardTitle>
     </CardHeader>
     <CardContent className="space-y-1">
-      <ReportDetailItem label="Framework" value={model.selectedFramework ? frameworkNameMapping[model.selectedFramework] || model.selectedFramework : 'N/A'} />
+      <ReportDetailItem label="Framework" value={model.selectedFramework ? csvFrameworkNameMapping[model.selectedFramework] || model.selectedFramework : 'N/A'} />
       <ReportDetailItem label="Base Model" value={model.selectedModel} />
       <ReportDetailItem label="Architecture" value={model.architecture} />
       <ReportDetailItem label="Data Size" value={model.dataSize} />
@@ -70,8 +75,14 @@ export function ReportsView({ reports }: ReportsViewProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadReport = (report: SavedReport) => {
+  const handleDownloadReportJSON = (report: SavedReport) => {
     downloadJSON(report, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.json`);
+  };
+
+  const handleDownloadReportCSV = (report: SavedReport) => {
+    const csvDataArray = convertReportToCsvDataArray(report);
+    const csvString = arrayToCsv(csvDataArray);
+    downloadCsv(csvString, `aura_report_${report.id.substring(0,8)}_${new Date(report.generatedAt).toISOString().split('T')[0]}.csv`);
   };
   
   const primaryUnit = selectedReport?.modelA?.energyUnit || selectedReport?.modelB?.energyUnit || "units";
@@ -118,8 +129,11 @@ export function ReportsView({ reports }: ReportsViewProps) {
                     </CardDescription>
                     </CardHeader>
                     <CardFooter className="flex justify-end gap-2">
-                     <Button variant="outline" size="sm" onClick={() => handleDownloadReport(report)}>
-                        <Download className="mr-2 h-4 w-4" /> Download
+                     <Button variant="outline" size="sm" onClick={() => handleDownloadReportJSON(report)}>
+                        <Download className="mr-2 h-4 w-4" /> JSON
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadReportCSV(report)}>
+                        <SheetIcon className="mr-2 h-4 w-4" /> CSV
                       </Button>
                     <Button variant="default" size="sm" onClick={() => handleViewDetails(report)}>
                         <Eye className="mr-2 h-4 w-4" /> View Details
@@ -197,11 +211,14 @@ export function ReportsView({ reports }: ReportsViewProps) {
                 </div>
               </div>
             </ScrollArea>
-            <DialogFooter className="p-6 border-t">
-               <Button variant="outline" onClick={() => handleDownloadReport(selectedReport)}>
-                <Download className="mr-2 h-4 w-4" /> Download this Report
+            <DialogFooter className="p-6 border-t sm:justify-start gap-2">
+               <Button variant="outline" onClick={() => handleDownloadReportJSON(selectedReport)}>
+                <Download className="mr-2 h-4 w-4" /> Download JSON
               </Button>
-              <DialogClose asChild>
+              <Button variant="outline" onClick={() => handleDownloadReportCSV(selectedReport)}>
+                <SheetIcon className="mr-2 h-4 w-4" /> Export CSV
+              </Button>
+              <DialogClose asChild className="sm:ml-auto">
                 <Button variant="secondary">Close</Button>
               </DialogClose>
             </DialogFooter>
@@ -211,3 +228,4 @@ export function ReportsView({ reports }: ReportsViewProps) {
     </div>
   );
 }
+
