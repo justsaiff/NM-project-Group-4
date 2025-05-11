@@ -30,28 +30,23 @@ interface NavItem {
 function DashboardView({ setActiveView }: { setActiveView: (view: View) => void }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out lg:col-span-1 xl:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-xl text-primary flex items-center gap-2"><Zap className="w-6 h-6" /> Welcome to Aura</CardTitle>
-          <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Aura helps you understand and optimize the energy consumption of your AI models.
-            Use the navigation menu or click the cards below to explore features like Energy Prediction, Model Optimization, Training Simulations, and more.
-          </p>
-          <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
-            <Image 
-              src="https://picsum.photos/seed/aura-welcome-main/800/400" 
-              alt="Abstract technology background representing AI and energy" 
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-              data-ai-hint="technology abstract"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="lg:col-span-1 xl:col-span-2 space-y-4 p-6 bg-card text-card-foreground shadow-lg rounded-lg">
+        <h2 className="text-2xl font-semibold text-primary flex items-center gap-2"><Zap className="w-6 h-6" /> Welcome to Aura</h2>
+        <p className="text-muted-foreground">
+          Aura is your AI Energy Efficiency Companion. It helps you understand and optimize the energy consumption of your AI models.
+          Use the navigation menu or click the cards below to explore features like Energy Prediction, Model Optimization, Training Simulations, and more.
+        </p>
+        <div className="mt-4 relative h-48 w-full rounded-md overflow-hidden">
+          <Image 
+            src="https://picsum.photos/seed/aura-welcome-main/800/400" 
+            alt="Abstract technology background representing AI and energy" 
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover"
+            data-ai-hint="technology abstract"
+          />
+        </div>
+      </div>
        <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("predictor")}>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><BarChartBig className="w-5 h-5"/>Energy Predictor</CardTitle>
@@ -328,3 +323,4 @@ export default function HomePage() {
     </AppLayout>
   );
 }
+
