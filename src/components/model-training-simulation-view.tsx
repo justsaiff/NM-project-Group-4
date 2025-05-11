@@ -6,7 +6,7 @@ import { simulateModelTraining, type ModelTrainingSimulationOutput } from "@/ai/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BrainCircuit, Loader2, Play, TrendingUp, LineChart as LineChartLucide, BarChartBig, BarChart2, PieChart as PieChartIconLucide, Star } from "lucide-react"; // Updated icons, Added Star
+import { BrainCircuit, Loader2, Play, TrendingUp, LineChart as LineChartLucide, BarChartBig, BarChart2, PieChart as PieChartIconLucide } from "lucide-react"; // Removed Star
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Separator } from "@/components/ui/separator";
@@ -196,16 +196,8 @@ export function ModelTrainingSimulationView() {
                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
                   <TabsTrigger value="bar">Bar Chart</TabsTrigger>
                   <TabsTrigger value="line">Line Chart</TabsTrigger>
-                  <TabsTrigger value="histogram">
-                    <div className="flex items-center gap-1">
-                      Histogram <Star className="w-3 h-3 text-accent" />
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger value="pie">
-                    <div className="flex items-center gap-1">
-                      Pie Chart <Star className="w-3 h-3 text-accent" />
-                    </div>
-                  </TabsTrigger>
+                  <TabsTrigger value="histogram">Histogram</TabsTrigger>
+                  <TabsTrigger value="pie">Pie Chart</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="bar">
