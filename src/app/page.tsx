@@ -11,13 +11,14 @@ import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
 import { ReportsView } from "@/components/reports-view"; 
 import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view";
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList } from "lucide-react";
+import { ModelTrainingSimulationView } from "@/components/model-training-simulation-view"; // Added new view
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList, BrainCircuit } from "lucide-react"; // Added BrainCircuit
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import type { SavedReport } from "@/types/reports"; 
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator";
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator" | "trainingSimulation"; // Added trainingSimulation
 
 interface NavItem {
   id: View;
@@ -156,6 +157,27 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </div>
         </CardContent>
       </Card>
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("trainingSimulation")}>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><BrainCircuit className="w-5 h-5"/>Training Simulation</CardTitle>
+          <CardDescription>Simulate energy usage during model training</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Observe a conceptual PyTorch model training process, including pruning and energy logging, without actual GPU/CPU load.
+          </p>
+           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
+            <Image 
+              src="https://picsum.photos/seed/aura-train-sim/600/400" 
+              alt="Training simulation concept" 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              data-ai-hint="neural network"
+            />
+          </div>
+        </CardContent>
+      </Card>
       <AppEnergyConsumptionCard />
     </div>
   );
@@ -215,6 +237,7 @@ export default function HomePage() {
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
     { id: "reports", label: "Saved", icon: FileText, action: () => setActiveView("reports") }, 
     { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") },
+    { id: "trainingSimulation", label: "Training Simulation", icon: BrainCircuit, action: () => setActiveView("trainingSimulation") }, // Added new nav item
   ];
 
   const renderView = () => {
@@ -235,6 +258,8 @@ export default function HomePage() {
         return <ReportsView reports={savedReports} />; 
       case "reportGenerator":
         return <EnergyReportGeneratorView />;
+      case "trainingSimulation":
+        return <ModelTrainingSimulationView />; // Added new view case
       default:
         return <DashboardView setActiveView={setActiveView} />;
     }
