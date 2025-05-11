@@ -222,7 +222,7 @@ export default function HomePage() {
       case "dashboard":
         return <DashboardView setActiveView={setActiveView} />;
       case "predictor":
-        return <EnergyPredictor />;
+        return <EnergyPredictor onSaveReport={handleSaveReport} />;
       case "optimizer":
         return <ModelOptimizer />;
       case "chatbot":
@@ -246,4 +246,3 @@ export default function HomePage() {
     </AppLayout>
   );
 }
-
