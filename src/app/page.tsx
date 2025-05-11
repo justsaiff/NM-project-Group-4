@@ -10,14 +10,14 @@ import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
 import { ReportsView } from "@/components/reports-view"; 
-import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view"; // New import
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList } from "lucide-react"; // Added ClipboardList
+import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view";
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import type { SavedReport } from "@/types/reports"; 
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator"; // Added reportGenerator
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator";
 
 interface NavItem {
   id: View;
@@ -28,20 +28,20 @@ interface NavItem {
 
 function DashboardView({ setActiveView }: { setActiveView: (view: View) => void }) {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out lg:col-span-1">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out lg:col-span-1 xl:col-span-2">
         <CardHeader>
-          <CardTitle className="text-xl text-primary">Dashboard Overview</CardTitle>
+          <CardTitle className="text-xl text-primary">Welcome to Aura</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
             Aura helps you understand and optimize the energy consumption of your AI models.
-            Use the navigation menu to explore features like the Energy Predictor and Model Optimizer.
+            Use the navigation menu to explore features like the Energy Predictor, Model Optimizer, and generate efficiency reports.
           </p>
           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-welcome/600/400" 
+              src="https://picsum.photos/seed/aura-welcome/800/400" 
               alt="Abstract technology background" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -136,6 +136,27 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </div>
         </CardContent>
       </Card>
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reportGenerator")}>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><ClipboardList className="w-5 h-5"/>Energy Report Generator</CardTitle>
+          <CardDescription>Generate AI efficiency reports</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Input 'before' metrics to generate a report showing potential energy savings and CO₂ reductions after AI optimization.
+          </p>
+           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
+            <Image 
+              src="https://picsum.photos/seed/aura-report-gen/600/400" 
+              alt="Report generation concept" 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              data-ai-hint="checklist document"
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -193,7 +214,7 @@ export default function HomePage() {
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
     { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, 
-    { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") }, // New NavItem
+    { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") },
   ];
 
   const renderView = () => {
@@ -212,7 +233,7 @@ export default function HomePage() {
         return <ModelComparisonView onSaveReport={handleSaveReport} />; 
       case "reports":
         return <ReportsView reports={savedReports} />; 
-      case "reportGenerator": // New case
+      case "reportGenerator":
         return <EnergyReportGeneratorView />;
       default:
         return <DashboardView setActiveView={setActiveView} />;
