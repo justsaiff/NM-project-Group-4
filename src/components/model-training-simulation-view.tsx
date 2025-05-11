@@ -6,22 +6,31 @@ import { simulateModelTraining, type ModelTrainingSimulationOutput } from "@/ai/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BrainCircuit, Loader2, Play, TrendingUp } from "lucide-react";
+import { BrainCircuit, Loader2, Play, TrendingUp, LineChartIcon, BarChartIcon, AreaChartIcon } from "lucide-react"; // Added chart icons
 import { useToast } from "@/hooks/use-toast";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
+
+type ChartType = "bar" | "line" | "histogram";
+
+interface HistogramDataPoint {
+  binName: string;
+  count: number;
+}
 
 export function ModelTrainingSimulationView() {
   const [simulationOutput, setSimulationOutput] = React.useState<ModelTrainingSimulationOutput | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [selectedChartType, setSelectedChartType] = React.useState<ChartType>("bar");
   const { toast } = useToast();
 
   const handleStartSimulation = async () => {
     setIsLoading(true);
     setSimulationOutput(null);
     try {
-      const result = await simulateModelTraining();
+      const result = await simulateModelTraining( {}); // Pass empty object for optional input
       setSimulationOutput(result);
       toast({
         title: "Simulation Complete",
@@ -39,7 +48,7 @@ export function ModelTrainingSimulationView() {
     }
   };
 
-  const chartData = React.useMemo(() => {
+  const epochChartData = React.useMemo(() => {
     if (!simulationOutput?.epochLogs) return [];
     return simulationOutput.epochLogs.map(log => ({
       name: `Epoch ${log.epoch}`,
@@ -47,6 +56,54 @@ export function ModelTrainingSimulationView() {
       unit: "kWh",
     }));
   }, [simulationOutput]);
+
+  const histogramData = React.useMemo((): HistogramDataPoint[] => {
+    if (!simulationOutput?.epochLogs || simulationOutput.epochLogs.length === 0) return [];
+
+    const energyValues = simulationOutput.epochLogs.map(log => log.estimatedEnergyUsage);
+    const minEnergy = Math.min(...energyValues);
+    const maxEnergy = Math.max(...energyValues);
+
+    // Define number of bins (e.g., 3-5 for small datasets)
+    const numBins = Math.min(Math.max(3, Math.floor(energyValues.length / 2)), 5);
+    if (numBins <=0 || minEnergy === maxEnergy) { // Handle edge cases like single data point or all same values
+        return energyValues.map(val => ({binName: `${val.toFixed(2)} kWh`, count: 1}));
+    }
+
+    const binWidth = (maxEnergy - minEnergy) / numBins;
+    
+    const bins: HistogramDataPoint[] = Array(numBins).fill(null).map((_, i) => {
+        const binStart = minEnergy + i * binWidth;
+        const binEnd = minEnergy + (i + 1) * binWidth;
+        return {
+            binName: `${binStart.toFixed(2)}-${binEnd.toFixed(2)} kWh`,
+            count: 0
+        };
+    });
+
+    // Ensure the last bin includes the max value
+    if (bins.length > 0) {
+        const lastBinParts = bins[bins.length - 1].binName.split('-');
+        bins[bins.length - 1].binName = `${lastBinParts[0]}-${maxEnergy.toFixed(2)} kWh`;
+    }
+
+
+    energyValues.forEach(value => {
+        let binIndex = Math.floor((value - minEnergy) / binWidth);
+        // Handle case where value is exactly maxEnergy, should go into the last bin
+        if (value === maxEnergy) {
+            binIndex = numBins - 1;
+        }
+        // Clamp index to be within bounds
+        binIndex = Math.max(0, Math.min(binIndex, numBins - 1));
+        if (bins[binIndex]) {
+          bins[binIndex].count++;
+        }
+    });
+    
+    return bins.filter(b => b.count > 0 || bins.length === 1); // Only return bins with data, or the single bin if only one
+  }, [simulationOutput]);
+
 
   return (
     <div className="space-y-8">
@@ -120,35 +177,102 @@ export function ModelTrainingSimulationView() {
             </section>
             <Separator />
             <section>
-              <h3 className="text-lg font-semibold text-accent mb-2">Estimated Energy Usage Chart</h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))"/>
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', style: { textAnchor: 'middle' } }}
-                    />
-                    <Tooltip
-                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                        contentStyle={{ 
-                            backgroundColor: 'hsl(var(--popover))', 
-                            borderColor: 'hsl(var(--border))',
-                            borderRadius: 'var(--radius)',
-                            color: 'hsl(var(--popover-foreground))'
-                        }}
-                        formatter={(value: number, name: string, entry: any) => {
-                            const { payload } = entry;
-                            return [`${value} ${payload.unit}`, name === "energy" ? "Energy" : name];
-                        }}
-                        labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }}/>
-                    <Bar dataKey="energy" name="Est. Energy" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} barSize={Math.max(20, 80 / chartData.length)}/>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <h3 className="text-lg font-semibold text-accent mb-4">Estimated Energy Usage Charts</h3>
+              <Tabs value={selectedChartType} onValueChange={(value) => setSelectedChartType(value as ChartType)} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="bar" className="flex items-center gap-2"><BarChartIcon className="w-4 h-4"/>Bar Chart</TabsTrigger>
+                  <TabsTrigger value="line" className="flex items-center gap-2"><LineChartIcon className="w-4 h-4"/>Line Chart</TabsTrigger>
+                  <TabsTrigger value="histogram" className="flex items-center gap-2"><AreaChartIcon className="w-4 h-4"/>Histogram</TabsTrigger>
+                </TabsList>
+                <TabsContent value="bar" className="mt-4">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={epochChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))"/>
+                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis 
+                            stroke="hsl(var(--muted-foreground))"
+                            label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', style: { textAnchor: 'middle' } }}
+                        />
+                        <Tooltip
+                            cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                            contentStyle={{ 
+                                backgroundColor: 'hsl(var(--popover))', 
+                                borderColor: 'hsl(var(--border))',
+                                borderRadius: 'var(--radius)',
+                                color: 'hsl(var(--popover-foreground))'
+                            }}
+                            formatter={(value: number, name: string, entry: any) => {
+                                const { payload } = entry;
+                                return [`${value} ${payload.unit}`, name === "energy" ? "Est. Energy" : name];
+                            }}
+                            labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }}/>
+                        <Bar dataKey="energy" name="Est. Energy" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} barSize={Math.max(20, 80 / epochChartData.length)}/>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TabsContent>
+                <TabsContent value="line" className="mt-4">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={epochChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))"/>
+                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis 
+                            stroke="hsl(var(--muted-foreground))"
+                            label={{ value: 'Energy (kWh)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', style: { textAnchor: 'middle' } }}
+                        />
+                        <Tooltip
+                            cursor={{ strokeDasharray: '3 3', stroke: 'hsl(var(--muted)/0.5)' }}
+                            contentStyle={{ 
+                                backgroundColor: 'hsl(var(--popover))', 
+                                borderColor: 'hsl(var(--border))',
+                                borderRadius: 'var(--radius)',
+                                color: 'hsl(var(--popover-foreground))'
+                            }}
+                             formatter={(value: number, name: string, entry: any) => {
+                                const { payload } = entry;
+                                return [`${value} ${payload.unit}`, name === "energy" ? "Est. Energy" : name];
+                            }}
+                            labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }}/>
+                        <Line type="monotone" dataKey="energy" name="Est. Energy" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--chart-1))" }} activeDot={{ r: 6 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TabsContent>
+                <TabsContent value="histogram" className="mt-4">
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={histogramData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))"/>
+                        <XAxis dataKey="binName" stroke="hsl(var(--muted-foreground))" interval={0} angle={-30} textAnchor="end" height={60} />
+                        <YAxis 
+                            stroke="hsl(var(--muted-foreground))"
+                            allowDecimals={false}
+                            label={{ value: 'Frequency (Epochs)', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))', style: { textAnchor: 'middle' } }}
+                        />
+                        <Tooltip
+                            cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                            contentStyle={{ 
+                                backgroundColor: 'hsl(var(--popover))', 
+                                borderColor: 'hsl(var(--border))',
+                                borderRadius: 'var(--radius)',
+                                color: 'hsl(var(--popover-foreground))'
+                            }}
+                            formatter={(value: number) => [value, "Frequency"]}
+                            labelStyle={{ color: 'hsl(var(--popover-foreground))', marginBottom: '4px', fontWeight: 'bold' }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '20px', color: 'hsl(var(--foreground))' }}/>
+                        <Bar dataKey="count" name="Epoch Count" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} barSize={Math.max(20, 120 / histogramData.length)} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </section>
             <Separator />
             <section>
@@ -161,3 +285,4 @@ export function ModelTrainingSimulationView() {
     </div>
   );
 }
+
