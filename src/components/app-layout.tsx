@@ -36,9 +36,10 @@ interface AppLayoutProps {
   navItems: NavItem[];
   activeView: string;
   children: React.ReactNode;
+  pageTitle: string; // Added pageTitle prop
 }
 
-export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
+export function AppLayout({ navItems, activeView, children, pageTitle }: AppLayoutProps) {
   const [isDarkTheme, setIsDarkTheme] = React.useState(true); 
 
   React.useEffect(() => {
@@ -63,9 +64,6 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
   const toggleTheme = () => {
     setIsDarkTheme(!isDarkTheme);
   };
-
-  const activeNavItem = navItems.find(item => item.id === activeView);
-  const pageTitle = activeNavItem ? activeNavItem.label : "Aura";
   
   return (
     <SidebarProvider defaultOpen>
@@ -98,7 +96,6 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
               <SidebarDevEnergyInfo />
             </SidebarMenuItem>
           </SidebarMenu>
-          {/* Theme toggle removed from here */}
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background">

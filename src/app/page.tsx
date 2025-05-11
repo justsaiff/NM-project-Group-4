@@ -11,14 +11,14 @@ import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
 import { ReportsView } from "@/components/reports-view"; 
 import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view";
-import { ModelTrainingSimulationView } from "@/components/model-training-simulation-view"; // Added new view
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList, BrainCircuit } from "lucide-react"; // Added BrainCircuit
+import { ModelTrainingSimulationView } from "@/components/model-training-simulation-view";
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList, BrainCircuit, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import type { SavedReport } from "@/types/reports"; 
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator" | "trainingSimulation"; // Added trainingSimulation
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator" | "trainingSimulation";
 
 interface NavItem {
   id: View;
@@ -32,18 +32,18 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out lg:col-span-1 xl:col-span-2">
         <CardHeader>
-          <CardTitle className="text-xl text-primary">Welcome to Aura</CardTitle>
+          <CardTitle className="text-xl text-primary flex items-center gap-2"><Zap className="w-6 h-6" /> Welcome to Aura</CardTitle>
           <CardDescription>Your AI Energy Efficiency Companion</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
             Aura helps you understand and optimize the energy consumption of your AI models.
-            Use the navigation menu to explore features like the Energy Predictor, Model Optimizer, and generate efficiency reports.
+            Use the navigation menu or click the cards below to explore features like Energy Prediction, Model Optimization, Training Simulations, and more.
           </p>
           <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-welcome/800/400" 
-              alt="Abstract technology background" 
+              src="https://picsum.photos/seed/aura-welcome-main/800/400" 
+              alt="Abstract technology background representing AI and energy" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -59,12 +59,12 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Input your model's architecture and data size to get an AI-powered prediction of its energy footprint.
+            Input your model's architecture, framework, and data size to get an AI-powered prediction of its energy footprint.
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-predictor/600/400" 
-              alt="Energy prediction concept" 
+              src="https://picsum.photos/seed/aura-predictor-dash/600/400" 
+              alt="Energy prediction graph concept" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -80,16 +80,16 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Receive suggestions like pruning and quantization to make your models smaller and faster while maintaining accuracy.
+            Describe your model and receive AI suggestions like pruning and quantization to make it smaller and more efficient.
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-optimizer/600/400" 
-              alt="Model optimization concept" 
+              src="https://picsum.photos/seed/aura-optimizer-dash/600/400" 
+              alt="Model optimization gears concept" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
-              data-ai-hint="circuit board"
+              data-ai-hint="circuit gears"
             />
           </div>
         </CardContent>
@@ -105,8 +105,8 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-chat/600/400" 
-              alt="Chatbot interface concept" 
+              src="https://picsum.photos/seed/aura-chat-dash/600/400" 
+              alt="Chatbot interface illustration" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -115,19 +115,61 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </div>
         </CardContent>
       </Card>
-       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reports")}>
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("savingTips")}>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>Saved Reports</CardTitle>
-          <CardDescription>Access saved model comparison reports</CardDescription>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><Lightbulb className="w-5 h-5"/>Energy Saving Tips</CardTitle>
+          <CardDescription>Learn how to optimize your AI</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Review all your previously saved model comparison reports in one place.
+            Explore AI-powered explanations and practical advice on various strategies to reduce the energy footprint of your models.
+          </p>
+          <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
+            <Image 
+              src="https://picsum.photos/seed/aura-tips-dash/600/400" 
+              alt="Lightbulb with green energy symbols" 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              data-ai-hint="idea lightbulb"
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("modelComparison")}>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><GitCompareArrows className="w-5 h-5"/>Model Comparison</CardTitle>
+          <CardDescription>Compare energy of different models</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Input details for multiple AI models to see a side-by-side comparison of their estimated energy consumption. Save and export reports.
+          </p>
+          <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
+            <Image 
+              src="https://picsum.photos/seed/aura-compare-dash/600/400" 
+              alt="Comparison chart with model icons" 
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              data-ai-hint="comparison chart"
+            />
+          </div>
+        </CardContent>
+      </Card>
+       <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reports")}>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>Saved Reports</CardTitle>
+          <CardDescription>Access your saved reports</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Review all your previously saved energy predictions and model comparison reports in one place.
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-reports/600/400" 
-              alt="Reports and documents concept" 
+              src="https://picsum.photos/seed/aura-reports-dash/600/400" 
+              alt="Folder with saved documents" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -143,12 +185,12 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Input 'before' metrics to generate a report showing potential energy savings and CO₂ reductions after AI optimization.
+            Input 'before' metrics to generate a report showing potential energy savings and CO₂ reductions after simulated AI optimization.
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-report-gen/600/400" 
-              alt="Report generation concept" 
+              src="https://picsum.photos/seed/aura-report-gen-dash/600/400" 
+              alt="Report document with checklist" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -160,16 +202,16 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
        <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("trainingSimulation")}>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><BrainCircuit className="w-5 h-5"/>Training Simulation</CardTitle>
-          <CardDescription>Simulate energy usage during model training</CardDescription>
+          <CardDescription>Simulate training energy usage</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Observe a conceptual PyTorch model training process, including pruning and energy logging, without actual GPU/CPU load.
+            Observe a conceptual model training process, including pruning and energy logging, with visualizations.
           </p>
            <div className="mt-4 relative h-40 w-full rounded-md overflow-hidden">
             <Image 
-              src="https://picsum.photos/seed/aura-train-sim/600/400" 
-              alt="Training simulation concept" 
+              src="https://picsum.photos/seed/aura-train-sim-dash/600/400" 
+              alt="Neural network brain concept" 
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover"
@@ -237,38 +279,52 @@ export default function HomePage() {
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
     { id: "reports", label: "Saved", icon: FileText, action: () => setActiveView("reports") }, 
     { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") },
-    { id: "trainingSimulation", label: "Training Simulation", icon: BrainCircuit, action: () => setActiveView("trainingSimulation") }, // Added new nav item
+    { id: "trainingSimulation", label: "Training Simulation", icon: BrainCircuit, action: () => setActiveView("trainingSimulation") },
   ];
 
   const renderView = () => {
+    let currentViewComponent;
     switch (activeView) {
       case "dashboard":
-        return <DashboardView setActiveView={setActiveView} />;
+        currentViewComponent = <DashboardView setActiveView={setActiveView} />;
+        break;
       case "predictor":
-        return <EnergyPredictor onSaveReport={handleSaveReport} />;
+        currentViewComponent = <EnergyPredictor onSaveReport={handleSaveReport} />;
+        break;
       case "optimizer":
-        return <ModelOptimizer />;
+        currentViewComponent = <ModelOptimizer />;
+        break;
       case "chatbot":
-        return <ChatbotView />;
+        currentViewComponent = <ChatbotView />;
+        break;
       case "savingTips":
-        return <SavingTipsView />;
+        currentViewComponent = <SavingTipsView />;
+        break;
       case "modelComparison":
-        return <ModelComparisonView onSaveReport={handleSaveReport} />; 
+        currentViewComponent = <ModelComparisonView onSaveReport={handleSaveReport} />; 
+        break;
       case "reports":
-        return <ReportsView reports={savedReports} />; 
+        currentViewComponent = <ReportsView reports={savedReports} />; 
+        break;
       case "reportGenerator":
-        return <EnergyReportGeneratorView />;
+        currentViewComponent = <EnergyReportGeneratorView />;
+        break;
       case "trainingSimulation":
-        return <ModelTrainingSimulationView />; // Added new view case
+        currentViewComponent = <ModelTrainingSimulationView />;
+        break;
       default:
-        return <DashboardView setActiveView={setActiveView} />;
+        currentViewComponent = <DashboardView setActiveView={setActiveView} />;
     }
+    return <div key={activeView} className="animate-in fade-in-50 duration-500">{currentViewComponent}</div>;
   };
+  
+  const activeNavItem = navItems.find(item => item.id === activeView);
+  const pageTitle = activeNavItem ? activeNavItem.label : "Aura";
+
 
   return (
-    <AppLayout navItems={navItems} activeView={activeView}>
+    <AppLayout navItems={navItems} activeView={activeView} pageTitle={pageTitle}>
       {renderView()}
     </AppLayout>
   );
 }
-
