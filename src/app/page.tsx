@@ -9,16 +9,17 @@ import { AppEnergyConsumptionCard } from "@/components/app-energy-consumption-ca
 import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
-import { ReportsView } from "@/components/reports-view"; 
+import { ReportsView } from "@/components/reports-view";
 import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view";
 import { ModelTrainingSimulationView } from "@/components/model-training-simulation-view";
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList, BrainCircuit, Zap } from "lucide-react";
+import { SettingsView } from "@/components/settings-view"; // Added SettingsView
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList, BrainCircuit, Zap, Settings as SettingsIcon } from "lucide-react"; // Added SettingsIcon
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import type { SavedReport } from "@/types/reports"; 
+import type { SavedReport } from "@/types/reports";
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator" | "trainingSimulation";
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator" | "trainingSimulation" | "settings"; // Added 'settings'
 
 interface NavItem {
   id: View;
@@ -155,7 +156,7 @@ export default function HomePage() {
           }
         } catch (error) {
           console.error("Failed to parse reports from localStorage:", error);
-          setSavedReports([]); 
+          setSavedReports([]);
           localStorage.setItem("auraSavedReports", JSON.stringify([]));
         }
       }
@@ -186,9 +187,10 @@ export default function HomePage() {
     { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") },
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
-    { id: "reports", label: "Saved", icon: FileText, action: () => setActiveView("reports") }, 
+    { id: "reports", label: "Saved", icon: FileText, action: () => setActiveView("reports") },
     { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") },
     { id: "trainingSimulation", label: "Training Simulation", icon: BrainCircuit, action: () => setActiveView("trainingSimulation") },
+    { id: "settings", label: "Settings", icon: SettingsIcon, action: () => setActiveView("settings") }, // Added Settings NavItem
   ];
 
   const renderView = () => {
@@ -210,10 +212,10 @@ export default function HomePage() {
         currentViewComponent = <SavingTipsView />;
         break;
       case "modelComparison":
-        currentViewComponent = <ModelComparisonView onSaveReport={handleSaveReport} />; 
+        currentViewComponent = <ModelComparisonView onSaveReport={handleSaveReport} />;
         break;
       case "reports":
-        currentViewComponent = <ReportsView reports={savedReports} />; 
+        currentViewComponent = <ReportsView reports={savedReports} />;
         break;
       case "reportGenerator":
         currentViewComponent = <EnergyReportGeneratorView />;
@@ -221,12 +223,15 @@ export default function HomePage() {
       case "trainingSimulation":
         currentViewComponent = <ModelTrainingSimulationView />;
         break;
+      case "settings": // Added Settings case
+        currentViewComponent = <SettingsView />;
+        break;
       default:
         currentViewComponent = <DashboardView setActiveView={setActiveView} />;
     }
     return <div key={activeView} className="animate-in fade-in-50 duration-500">{currentViewComponent}</div>;
   };
-  
+
   const activeNavItem = navItems.find(item => item.id === activeView);
   const pageTitle = activeNavItem ? activeNavItem.label : "Aura";
 
