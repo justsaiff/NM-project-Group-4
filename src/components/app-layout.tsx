@@ -6,7 +6,6 @@ import { Moon, Sun } from "lucide-react";
 import * as React from "react";
 
 import { AuraLogo } from "@/components/aura-logo";
-import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +21,9 @@ import {
 } from "@/components/ui/sidebar";
 import { SheetTitle } from "@/components/ui/sheet"; 
 import { SidebarDevEnergyInfo } from "@/components/sidebar-dev-energy-info";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 interface NavItem {
   id: string;
@@ -42,14 +44,19 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkTheme(prefersDark); 
-      document.documentElement.classList.toggle('dark', prefersDark);
+      const storedTheme = localStorage.getItem('aura-theme');
+      if (storedTheme) {
+        setIsDarkTheme(storedTheme === 'dark');
+      } else {
+        setIsDarkTheme(prefersDark); 
+      }
     }
   }, []);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       document.documentElement.classList.toggle('dark', isDarkTheme);
+      localStorage.setItem('aura-theme', isDarkTheme ? 'dark' : 'light');
     }
   }, [isDarkTheme]);
 
@@ -91,21 +98,25 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
               <SidebarDevEnergyInfo />
             </SidebarMenuItem>
           </SidebarMenu>
-          <Separator className="my-2" />
-           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={toggleTheme} tooltip={{ children: isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode", className: "bg-card text-card-foreground border-border shadow-lg" }}>
-                {isDarkTheme ? <Sun /> : <Moon />}
-                <span>{isDarkTheme ? "Light Mode" : "Dark Mode"}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          {/* Theme toggle removed from here */}
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="bg-background">
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          <SidebarTrigger /> 
-          <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
+          <div className="flex items-center gap-4">
+            <SidebarTrigger /> 
+            <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
+          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+                {isDarkTheme ? <Sun className="h-5 w-5 text-foreground" /> : <Moon className="h-5 w-5 text-foreground" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="bg-card text-card-foreground border-border shadow-lg">
+              <p>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</p>
+            </TooltipContent>
+          </Tooltip>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
           {children}
@@ -114,4 +125,3 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
-
