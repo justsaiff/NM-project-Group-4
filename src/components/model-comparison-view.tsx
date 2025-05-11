@@ -24,7 +24,7 @@ import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown, PlusCircle
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Added import for ScrollArea
+import { ScrollArea } from "@/components/ui/scroll-area"; 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
@@ -296,7 +296,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
 
   return (
     <div className="space-y-8">
-      <Card className="bg-card text-card-foreground shadow-xl">
+      <Card className="w-full max-w-5xl mx-auto bg-card text-card-foreground shadow-xl">
         <CardHeader>
           <CardTitle className="text-2xl text-primary flex items-center gap-2">
             <GitCompareArrows className="w-6 h-6" /> Model Energy Comparison
@@ -304,7 +304,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
           <CardDescription>
             Input details for multiple AI models to compare their estimated energy consumption.
           </CardDescription>
-          <div className="flex items-center gap-2 pt-4">
+          <div className="flex items-center gap-2 pt-4 flex-wrap">
             <Label htmlFor="numModelsInput" className="text-sm text-muted-foreground whitespace-nowrap">Number of Models:</Label>
             <Input
               id="numModelsInput"
@@ -417,7 +417,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
       </Card>
 
       {comparisonResults && comparisonResults.length > 0 && (
-        <Card className="bg-card text-card-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-500">
+        <Card className="w-full max-w-5xl mx-auto bg-card text-card-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-500">
           <CardHeader>
             <CardTitle className="text-2xl text-primary">Comparison Results</CardTitle>
             <CardDescription>Side-by-side energy prediction and key differences for {comparisonResults.length} models.</CardDescription>
