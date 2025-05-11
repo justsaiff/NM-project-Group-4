@@ -24,7 +24,6 @@ import { GitCompareArrows, Loader2, FileDown, Save, Sheet, ImageDown, PlusCircle
 import { ModelSelector } from "./model-selector";
 import { FrameworkSelector } from "./framework-selector";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area"; 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { SavedReport, ModelReportDetails, ReportChartData } from "@/types/reports";
 import { convertReportToCsvDataArray, arrayToCsv, downloadCsv } from "@/lib/csv-utils";
@@ -166,7 +165,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
         const parsed = parseEnergyValueAndUnit(result.predictedEnergyConsumption);
         const modelInput = values.models[index];
         return {
-          name: `Model ${index + 1}`,
+          name: `${modelInput.selectedModel || modelInput.architecture.split(' ')[0] || 'Model'} ${index + 1}`, // More descriptive name
           selectedModel: modelInput.selectedModel || "Custom",
           selectedFramework: modelInput.selectedFramework,
           architecture: modelInput.architecture,
@@ -206,10 +205,10 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
   const generateReportObject = (): Omit<SavedReport, 'id'> | null => {
     if (!comparisonResults || comparisonResults.length === 0) return null;
     
-    const modelNames = comparisonResults.map(m => m.architecture || m.name).join(" vs ");
+    const modelNames = comparisonResults.map(m => m.selectedModel || m.architecture || m.name).join(" vs ");
   
     return {
-      reportTitle: `Comparison: ${modelNames}`,
+      reportTitle: `Comparison: ${modelNames.substring(0, 100)}${modelNames.length > 100 ? '...' : ''}`, // Truncate if too long
       generatedAt: new Date().toISOString(),
       models: comparisonResults,
       comparisonSummary: {
@@ -258,11 +257,14 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
         img.onload = () => {
           const canvas = document.createElement('canvas');
           const svgClientRect = svgElement.getBoundingClientRect();
-          canvas.width = svgClientRect.width;
-          canvas.height = svgClientRect.height;
+          canvas.width = svgClientRect.width * 2; // Increase resolution for better quality
+          canvas.height = svgClientRect.height * 2;
+          canvas.style.width = `${svgClientRect.width}px`;
+          canvas.style.height = `${svgClientRect.height}px`;
           const ctx = canvas.getContext('2d');
 
           if (ctx) {
+            ctx.scale(2,2); // Scale context for higher DPI rendering
             const isDarkMode = document.documentElement.classList.contains('dark');
             ctx.fillStyle = isDarkMode ? 'hsl(var(--card))' : 'hsl(var(--card))'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -396,7 +398,7 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
                   </div>
                 </Card>
               ))}
-              { fields.length > 0 && ( // Only show 'Add Another Model' if there's at least one model shown due to form schema min validation
+              { fields.length > 0 && ( 
                 <Button
                     type="button"
                     variant="outline"
@@ -423,24 +425,22 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
             <CardDescription>Side-by-side energy prediction and key differences for {comparisonResults.length} models.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className={`grid gap-6`} style={{ gridTemplateColumns: `repeat(${Math.min(comparisonResults.length, 3)}, minmax(280px, 1fr))` }}>
-                {comparisonResults.map((modelResult, idx) => (
-                  <Card key={idx} className="bg-background/30 min-w-[280px] inline-block align-top">
-                    <CardHeader><CardTitle className="text-lg text-accent">{modelResult.name}</CardTitle></CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                      <p><strong>Framework:</strong> {modelResult.selectedFramework?.toUpperCase() || "N/A"}</p>
-                      <p><strong>Base Model:</strong> {modelResult.selectedModel}</p>
-                      <p><strong>Architecture:</strong> {modelResult.architecture}</p>
-                      <p><strong>Data Size:</strong> {modelResult.dataSize}</p>
-                      <Separator className="my-2"/>
-                      <p><strong>Predicted Energy:</strong> <span className="font-semibold text-accent">{modelResult.predictedEnergyConsumption}</span></p>
-                      <p><strong>Confidence:</strong> {modelResult.confidenceLevel}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {comparisonResults.map((modelResult, idx) => (
+                <Card key={idx} className="bg-background/30">
+                  <CardHeader><CardTitle className="text-lg text-accent">{modelResult.name}</CardTitle></CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <p><strong>Framework:</strong> {modelResult.selectedFramework?.toUpperCase() || "N/A"}</p>
+                    <p><strong>Base Model:</strong> {modelResult.selectedModel}</p>
+                    <p><strong>Architecture:</strong> {modelResult.architecture}</p>
+                    <p><strong>Data Size:</strong> {modelResult.dataSize}</p>
+                    <Separator className="my-2"/>
+                    <p><strong>Predicted Energy:</strong> <span className="font-semibold text-accent">{modelResult.predictedEnergyConsumption}</span></p>
+                    <p><strong>Confidence:</strong> {modelResult.confidenceLevel}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
             
 
             <Separator />
@@ -511,3 +511,5 @@ export function ModelComparisonView({ onSaveReport }: ModelComparisonViewProps) 
   );
 }
 
+
+    
