@@ -114,7 +114,6 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </div>
         </CardContent>
       </Card>
-      <AppEnergyConsumptionCard />
        <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reports")}>
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>Saved Reports</CardTitle>
@@ -157,6 +156,7 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
           </div>
         </CardContent>
       </Card>
+      <AppEnergyConsumptionCard />
     </div>
   );
 }
@@ -246,3 +246,4 @@ export default function HomePage() {
     </AppLayout>
   );
 }
+
