@@ -17,9 +17,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger, // Added import for SidebarTrigger
+  SidebarTrigger, 
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SheetTitle } from "@/components/ui/sheet"; 
+import { SidebarDevEnergyInfo } from "@/components/sidebar-dev-energy-info";
 
 interface NavItem {
   id: string;
@@ -83,6 +85,12 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="p-2">
+          <SidebarSeparator /> 
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarDevEnergyInfo />
+            </SidebarMenuItem>
+          </SidebarMenu>
           <Separator className="my-2" />
            <SidebarMenu>
             <SidebarMenuItem>
@@ -96,7 +104,7 @@ export function AppLayout({ navItems, activeView, children }: AppLayoutProps) {
       </Sidebar>
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:px-8">
-          <SidebarTrigger /> {/* Added SidebarTrigger for toggling sidebar */}
+          <SidebarTrigger /> 
           <h1 className="text-xl font-semibold text-foreground">{pageTitle}</h1>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
