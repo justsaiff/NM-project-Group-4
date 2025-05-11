@@ -6,12 +6,12 @@ import { simulateModelTraining, type ModelTrainingSimulationOutput } from "@/ai/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BrainCircuit, Loader2, Play, TrendingUp, LineChart, BarChartBig, BarChart2, PieChart as PieChartIconLucide } from "lucide-react"; // Updated icons
+import { BrainCircuit, Loader2, Play, TrendingUp, LineChart as LineChartLucide, BarChartBig, BarChart2, PieChart as PieChartIconLucide, Star } from "lucide-react"; // Updated icons, Added Star
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HistogramDataPoint {
   binName: string;
@@ -196,8 +196,16 @@ export function ModelTrainingSimulationView() {
                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4">
                   <TabsTrigger value="bar">Bar Chart</TabsTrigger>
                   <TabsTrigger value="line">Line Chart</TabsTrigger>
-                  <TabsTrigger value="histogram">Histogram</TabsTrigger>
-                  <TabsTrigger value="pie">Pie Chart</TabsTrigger>
+                  <TabsTrigger value="histogram">
+                    <div className="flex items-center gap-1">
+                      Histogram <Star className="w-3 h-3 text-accent" />
+                    </div>
+                  </TabsTrigger>
+                  <TabsTrigger value="pie">
+                    <div className="flex items-center gap-1">
+                      Pie Chart <Star className="w-3 h-3 text-accent" />
+                    </div>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="bar">
@@ -242,7 +250,7 @@ export function ModelTrainingSimulationView() {
                   <Card className="bg-background/30">
                     <CardHeader>
                       <CardTitle className="text-md text-primary flex items-center gap-2">
-                        <LineChart className="w-5 h-5" /> Energy Trend
+                        <LineChartLucide className="w-5 h-5" /> Energy Trend
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="h-[300px] w-full">
