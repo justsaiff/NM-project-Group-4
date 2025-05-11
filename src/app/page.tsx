@@ -117,7 +117,7 @@ function DashboardView({ setActiveView }: { setActiveView: (view: View) => void 
       <AppEnergyConsumptionCard />
        <Card className="bg-card text-card-foreground shadow-lg hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-in-out cursor-pointer" onClick={() => setActiveView("reports")}>
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>View Reports</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-2 text-primary"><FileText className="w-5 h-5"/>Saved Reports</CardTitle>
           <CardDescription>Access saved model comparison reports</CardDescription>
         </CardHeader>
         <CardContent>
@@ -213,7 +213,7 @@ export default function HomePage() {
     { id: "chatbot", label: "Aura Chat", icon: MessageCircle, action: () => setActiveView("chatbot") },
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
-    { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, 
+    { id: "reports", label: "Saved", icon: FileText, action: () => setActiveView("reports") }, 
     { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") },
   ];
 
