@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 // import type { Metadata } from 'next'; // Metadata removed
-import { poppins, roboto, lora, inter } from '@/lib/fonts';
+import { poppins, roboto, lora, inter, merriweather } from '@/lib/fonts'; // Added merriweather
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
@@ -15,13 +15,14 @@ import { cn } from '@/lib/utils';
 //   description: 'Predict and optimize energy consumption of AI models.',
 // };
 
-export type FontKey = 'poppins' | 'roboto' | 'lora' | 'inter';
+export type FontKey = 'poppins' | 'roboto' | 'lora' | 'inter' | 'timesNewRoman'; // Added 'timesNewRoman'
 
 export const fontConfig: Record<FontKey, { name: string; className: string; variable: string }> = {
   poppins: { name: "Poppins", className: poppins.className, variable: poppins.variable },
   roboto: { name: "Roboto", className: roboto.className, variable: roboto.variable },
   lora: { name: "Lora", className: lora.className, variable: lora.variable },
   inter: { name: "Inter", className: inter.className, variable: inter.variable },
+  timesNewRoman: { name: "Times New Roman", className: merriweather.className, variable: merriweather.variable }, // Added Times New Roman (using Merriweather)
 };
 
 export const defaultFontKey: FontKey = 'poppins';

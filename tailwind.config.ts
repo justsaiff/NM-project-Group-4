@@ -19,6 +19,8 @@ export default {
         roboto: ['var(--font-roboto)', ...defaultTheme.fontFamily.sans],
         lora: ['var(--font-lora)', ...defaultTheme.fontFamily.serif], // Lora is a serif font
         inter: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
+        merriweather: ['var(--font-merriweather)', ...defaultTheme.fontFamily.serif], // Added for Times New Roman (using Merriweather)
+        timesNewRoman: ['var(--font-merriweather)', ...defaultTheme.fontFamily.serif], // Alias for Times New Roman
       },
       colors: {
         background: 'hsl(var(--background))',
