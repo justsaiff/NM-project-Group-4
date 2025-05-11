@@ -5,16 +5,24 @@ import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Sun, Palette } from "lucide-react"; // Added Palette icon
+import { Moon, Sun, Palette, Trash2, Type } from "lucide-react"; // Added Type icon
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { FontKey } from "@/app/layout"; // Import FontKey type
+import { fontConfig, defaultFontKey } from "@/app/layout"; // Import fontConfig and defaultFontKey
+
 
 export function SettingsView() {
   const { toast } = useToast();
-  const [isDarkTheme, setIsDarkTheme] = React.useState(true); // Default to true or load from localStorage
+  const [isDarkTheme, setIsDarkTheme] = React.useState(true);
+  const [selectedFont, setSelectedFont] = React.useState<FontKey>(defaultFontKey);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedTheme = localStorage.getItem('aura-theme');
       setIsDarkTheme(storedTheme === 'dark');
+
+      const storedFont = localStorage.getItem('aura-font') as FontKey | null;
+      setSelectedFont(storedFont && fontConfig[storedFont] ? storedFont : defaultFontKey);
     }
   }, []);
 
@@ -27,6 +35,19 @@ export function SettingsView() {
       toast({
         title: "Theme Changed",
         description: `Switched to ${newTheme ? 'Dark' : 'Light'} Mode.`,
+      });
+    }
+  };
+
+  const handleFontChange = (fontKey: FontKey) => {
+    if (fontConfig[fontKey]) {
+      setSelectedFont(fontKey);
+      localStorage.setItem('aura-font', fontKey);
+      // Dispatch a custom event to notify RootLayout or other components
+      window.dispatchEvent(new CustomEvent('auraFontChanged', { detail: fontKey }));
+      toast({
+        title: "Font Changed",
+        description: `Switched to ${fontConfig[fontKey].name} font.`,
       });
     }
   };
@@ -65,6 +86,25 @@ export function SettingsView() {
             </Button>
           </div>
 
+          <div className="p-4 border rounded-lg bg-background/30">
+            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2"><Type className="w-5 h-5" /> Font Style</h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Choose your preferred font for the application.
+            </p>
+            <Select value={selectedFont} onValueChange={(value) => handleFontChange(value as FontKey)}>
+              <SelectTrigger className="w-full md:w-[280px] bg-input">
+                <SelectValue placeholder="Select a font" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover text-popover-foreground">
+                {Object.entries(fontConfig).map(([key, { name }]) => (
+                  <SelectItem key={key} value={key} className="focus:bg-accent focus:text-accent-foreground">
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex items-center justify-between p-4 border rounded-lg bg-background/30">
             <div>
               <h4 className="font-semibold text-foreground">Data Management</h4>
@@ -73,7 +113,7 @@ export function SettingsView() {
               </p>
             </div>
             <Button variant="destructive" onClick={handleClearCache}>
-              Clear Local Cache
+              <Trash2 className="mr-2 h-4 w-4" /> Clear Local Cache
             </Button>
           </div>
           
@@ -83,7 +123,6 @@ export function SettingsView() {
             <p className="text-sm text-muted-foreground">
               Configure how you receive notifications from Aura. (Feature not yet implemented)
             </p>
-            {/* Example: <Switch id="email-notifications" /> <Label htmlFor="email-notifications">Email Notifications</Label> */}
           </div>
 
         </CardContent>

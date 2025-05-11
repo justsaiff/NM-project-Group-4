@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
-  darkMode: ["class"], // Keep class strategy for potential future light mode toggle
+  darkMode: ["class"], 
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,7 +11,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // The 'sans' key is for the default `font-sans` utility.
+        // It will use Poppins by default.
+        // The specific font classes (e.g., `font-poppins`, `font-roboto`) will be applied to the body to change the overall font.
         sans: ['var(--font-poppins)', ...defaultTheme.fontFamily.sans],
+        poppins: ['var(--font-poppins)', ...defaultTheme.fontFamily.sans],
+        roboto: ['var(--font-roboto)', ...defaultTheme.fontFamily.sans],
+        lora: ['var(--font-lora)', ...defaultTheme.fontFamily.serif], // Lora is a serif font
+        inter: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
       },
       colors: {
         background: 'hsl(var(--background))',
