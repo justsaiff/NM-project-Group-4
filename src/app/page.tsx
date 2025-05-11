@@ -10,13 +10,14 @@ import { SavingTipsView } from "@/components/saving-tips-view";
 import { ModelComparisonView } from "@/components/model-comparison-view";
 import { ChatbotView } from "@/components/chatbot-view";
 import { ReportsView } from "@/components/reports-view"; 
-import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText } from "lucide-react"; 
+import { EnergyReportGeneratorView } from "@/components/energy-report-generator-view"; // New import
+import { BarChartBig, Settings2, Lightbulb, GitCompareArrows, MessageCircle, Home, FileText, ClipboardList } from "lucide-react"; // Added ClipboardList
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import type { SavedReport } from "@/types/reports"; 
 
-type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports";
+type View = "dashboard" | "predictor" | "optimizer" | "savingTips" | "modelComparison" | "chatbot" | "reports" | "reportGenerator"; // Added reportGenerator
 
 interface NavItem {
   id: View;
@@ -192,6 +193,7 @@ export default function HomePage() {
     { id: "savingTips", label: "Saving Tips", icon: Lightbulb, action: () => setActiveView("savingTips") },
     { id: "modelComparison", label: "Model Comparison", icon: GitCompareArrows, action: () => setActiveView("modelComparison") },
     { id: "reports", label: "Reports", icon: FileText, action: () => setActiveView("reports") }, 
+    { id: "reportGenerator", label: "Report Generator", icon: ClipboardList, action: () => setActiveView("reportGenerator") }, // New NavItem
   ];
 
   const renderView = () => {
@@ -210,6 +212,8 @@ export default function HomePage() {
         return <ModelComparisonView onSaveReport={handleSaveReport} />; 
       case "reports":
         return <ReportsView reports={savedReports} />; 
+      case "reportGenerator": // New case
+        return <EnergyReportGeneratorView />;
       default:
         return <DashboardView setActiveView={setActiveView} />;
     }
