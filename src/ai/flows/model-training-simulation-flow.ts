@@ -30,7 +30,8 @@ const ModelTrainingSimulationOutputSchema = z.object({
 export type ModelTrainingSimulationOutput = z.infer<typeof ModelTrainingSimulationOutputSchema>;
 
 export async function simulateModelTraining(input?: ModelTrainingSimulationInput): Promise<ModelTrainingSimulationOutput> {
-  return modelTrainingSimulationFlow(input);
+  // Ensure an empty object is passed if input is undefined, to satisfy Genkit's expectation of an object for object schemas.
+  return modelTrainingSimulationFlow(input || {});
 }
 
 const modelTrainingSimulationFlow = ai.defineFlow(
@@ -39,7 +40,7 @@ const modelTrainingSimulationFlow = ai.defineFlow(
     inputSchema: ModelTrainingSimulationInputSchema,
     outputSchema: ModelTrainingSimulationOutputSchema,
   },
-  async () => {
+  async () => { // Input argument is optional here due to the schema
     // Simulate the Python script's behavior
     const numEpochs = 5;
     const epochLogs: Array<{ epoch: number; estimatedEnergyUsage: number }> = [];
@@ -67,3 +68,4 @@ Device for Autocast: CUDA if available, else CPU.`,
     return output;
   }
 );
+
